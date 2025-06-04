@@ -55,9 +55,10 @@ def test_candidate_selector():
     assert selected in candidates
 
 def test_hybrid_optimization_core():
-    """Test main hybrid optimization functionality."""
+    """Test main hybrid optimization functionality with RL enhancements."""
     config = HybridOptimizationConfig(
-        optimization_strategies=['kernel_fusion', 'quantization']
+        optimization_strategies=['kernel_fusion', 'quantization'],
+        enable_rl_optimization=False  # Disable for faster testing
     )
     
     hybrid_core = HybridOptimizationCore(config)
@@ -73,6 +74,33 @@ def test_hybrid_optimization_core():
     report = hybrid_core.get_optimization_report()
     assert 'total_optimizations' in report
     assert report['total_optimizations'] == 1
+
+def test_rl_enhanced_optimization():
+    """Test RL-enhanced optimization with DAPO, VAPO, and ORZ."""
+    config = HybridOptimizationConfig(
+        optimization_strategies=['kernel_fusion', 'quantization'],
+        enable_rl_optimization=True,
+        enable_dapo=True,
+        enable_vapo=True,
+        enable_orz=True,
+        rl_max_episodes=5  # Reduced for testing
+    )
+    
+    hybrid_core = HybridOptimizationCore(config)
+    model = SimpleTestModel()
+    
+    optimized_model, result = hybrid_core.hybrid_optimize_module(model)
+    
+    assert optimized_model is not None
+    assert isinstance(result, dict)
+    assert 'selected_strategy' in result
+    
+    report = hybrid_core.get_optimization_report()
+    assert 'rl_optimization_enabled' in report
+    assert report['rl_optimization_enabled'] == True
+    assert 'dapo_enabled' in report
+    assert 'vapo_enabled' in report
+    assert 'orz_enabled' in report
 
 def test_factory_function():
     """Test factory function for creating hybrid optimization core."""
@@ -93,5 +121,6 @@ if __name__ == "__main__":
     test_hybrid_optimization_config()
     test_candidate_selector()
     test_hybrid_optimization_core()
+    test_rl_enhanced_optimization()
     test_factory_function()
-    print("✅ All hybrid optimization tests passed!")
+    print("✅ All hybrid optimization tests with RL enhancements passed!")

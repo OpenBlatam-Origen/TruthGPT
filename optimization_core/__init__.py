@@ -90,7 +90,8 @@ from .optimization_profiles import OptimizationProfile, get_optimization_profile
 
 from .hybrid_optimization_core import (
     HybridOptimizationCore, HybridOptimizationConfig, CandidateSelector,
-    HybridOptimizationStrategy, create_hybrid_optimization_core
+    HybridOptimizationStrategy, HybridRLOptimizer, PolicyNetwork, ValueNetwork,
+    OptimizationEnvironment, create_hybrid_optimization_core
 )
 
 __all__ = [
@@ -295,6 +296,10 @@ __all__ = [
     'HybridOptimizationConfig',
     'CandidateSelector',
     'HybridOptimizationStrategy',
+    'HybridRLOptimizer',
+    'PolicyNetwork',
+    'ValueNetwork',
+    'OptimizationEnvironment',
     'create_hybrid_optimization_core'
 ]
 

@@ -8,10 +8,13 @@ This document describes the comprehensive hybrid optimization system for TruthGP
 
 ### Core Components
 
-1. **HybridOptimizationCore**: Main orchestrator that manages candidate generation and selection
-2. **CandidateSelector**: Implements tournament, roulette wheel, and rank-based selection algorithms
+1. **HybridOptimizationCore**: Main orchestrator that manages candidate generation and selection with RL enhancements
+2. **CandidateSelector**: Implements tournament, roulette wheel, rank-based, and RL-enhanced selection algorithms
 3. **HybridOptimizationStrategy**: Provides multiple optimization strategies (kernel fusion, quantization, memory pooling, attention fusion)
-4. **Enhanced Model Optimizer Integration**: Seamless integration with existing optimization pipeline
+4. **HybridRLOptimizer**: RL-based optimizer implementing DAPO, VAPO, and ORZ techniques
+5. **PolicyNetwork & ValueNetwork**: Neural networks for RL-based candidate evaluation and selection
+6. **OptimizationEnvironment**: Environment for RL training and candidate evaluation
+7. **Enhanced Model Optimizer Integration**: Seamless integration with existing optimization pipeline
 
 ### Optimization Strategies
 
@@ -41,20 +44,39 @@ This document describes the comprehensive hybrid optimization system for TruthGP
 
 ### Candidate Selection Algorithms
 
-#### Tournament Selection
+#### Traditional Selection Methods
+
+**Tournament Selection**
 - Selects best candidates through tournament-style competition
 - Configurable tournament size (default: 3)
 - Best for exploitation of known good strategies
 
-#### Roulette Wheel Selection
+**Roulette Wheel Selection**
 - Probabilistic selection based on fitness scores
 - Allows exploration of diverse strategies
 - Good for discovering new optimization combinations
 
-#### Rank-based Selection
+**Rank-based Selection**
 - Selection based on relative ranking of candidates
 - Balanced approach between exploitation and exploration
 - Robust against fitness score outliers
+
+#### RL-Enhanced Selection Methods
+
+**DAPO (Dynamic Accuracy-based Policy Optimization)**
+- Filters training episodes based on accuracy thresholds (0 < accuracy < 1)
+- Ensures high-quality training data for policy optimization
+- Prevents learning from degenerate optimization episodes
+
+**VAPO (Value-Aware Policy Optimization)**
+- Uses value function estimation with Generalized Advantage Estimation (GAE)
+- Implements PPO-like policy updates with clipped surrogate objectives
+- Balances policy improvement with value function learning
+
+**ORZ (Optimized Reward Zoning)**
+- Applies model-based reward adjustments to enhance optimization performance
+- Zones state-action pairs for targeted reward enhancement
+- Improves convergence and optimization quality
 
 ### Ensemble Optimization
 
@@ -77,6 +99,10 @@ Example ensemble combinations:
 config = {
     'enable_candidate_selection': True,
     'enable_ensemble_optimization': True,
+    'enable_rl_optimization': True,
+    'enable_dapo': True,
+    'enable_vapo': True,
+    'enable_orz': True,
     'num_candidates': 5,
     'tournament_size': 3,
     'selection_strategy': 'tournament',
@@ -98,6 +124,13 @@ advanced_config = {
     'enable_adaptive_hybrid': True,
     'enable_multi_objective_optimization': True,
     'enable_ensemble_optimization': True,
+    
+    # RL enhancements
+    'enable_rl_optimization': True,
+    'enable_dapo': True,
+    'enable_vapo': True,
+    'enable_orz': True,
+    
     'num_candidates': 8,
     'tournament_size': 4,
     'selection_strategy': 'tournament',
@@ -114,7 +147,18 @@ advanced_config = {
     },
     'performance_threshold': 0.8,
     'convergence_threshold': 0.01,
-    'max_iterations': 10
+    'max_iterations': 10,
+    
+    # RL-specific parameters
+    'rl_hidden_dim': 128,
+    'rl_learning_rate': 3e-4,
+    'rl_value_learning_rate': 1e-3,
+    'rl_gamma': 0.99,
+    'rl_lambda': 0.95,
+    'rl_epsilon_low': 0.1,
+    'rl_epsilon_high': 0.3,
+    'rl_max_episodes': 100,
+    'rl_max_steps_per_episode': 50
 }
 ```
 
@@ -202,6 +246,10 @@ config = {
     'enable_hybrid_optimization': True,
     'enable_candidate_selection': True,
     'enable_ensemble_optimization': True,
+    'enable_rl_optimization': True,
+    'enable_dapo': True,
+    'enable_vapo': True,
+    'enable_orz': True,
     'num_candidates': 5,
     'hybrid_strategies': ['kernel_fusion', 'quantization', 'memory_pooling', 'attention_fusion']
 }
@@ -222,8 +270,12 @@ for candidate in candidates:
     fitness = hybrid_core.candidate_selector.evaluate_candidate_fitness(candidate)
     fitness_scores.append(fitness)
 
-# Select best candidate using tournament selection
-best_candidate = hybrid_core.candidate_selector.tournament_selection(candidates, fitness_scores)
+# Select best candidate using RL-enhanced selection (if enabled)
+best_candidate = hybrid_core.candidate_selector.select_candidate(candidates, fitness_scores)
+
+# Or use specific selection methods
+tournament_candidate = hybrid_core.candidate_selector.tournament_selection(candidates, fitness_scores)
+rl_candidate = hybrid_core.candidate_selector.rl_enhanced_selection(candidates, fitness_scores)
 ```
 
 ## Advanced Features
@@ -235,6 +287,16 @@ The system learns from optimization history to improve future selections:
 - **Strategy Performance Tracking**: Records success rates of different strategies
 - **Model-Specific Adaptation**: Learns which strategies work best for specific model types
 - **Dynamic Weight Adjustment**: Adjusts objective weights based on historical performance
+
+### Reinforcement Learning Enhancements
+
+The RL-enhanced system provides advanced learning capabilities:
+
+- **DAPO Dynamic Sampling**: Filters training episodes to ensure quality learning data
+- **VAPO Value Learning**: Uses value function estimation for better policy updates
+- **ORZ Reward Zoning**: Applies model-based reward adjustments for enhanced performance
+- **Policy Network Learning**: Learns optimal candidate selection strategies over time
+- **Adaptive Strategy Selection**: Dynamically selects optimization strategies based on learned policies
 
 ### Multi-Modal Optimization
 
