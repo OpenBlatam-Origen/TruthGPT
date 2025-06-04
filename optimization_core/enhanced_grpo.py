@@ -282,18 +282,40 @@ class EnhancedGRPOTrainer:
         return final_loss
     
     def _get_rewards(self, inputs):
-        """Advanced reward computation using compute_reward_function."""
+        """Advanced reward computation with multi-objective optimization."""
         if hasattr(inputs, 'input_ids'):
             input_ids = inputs.input_ids
             batch_size = input_ids.size(0)
+            seq_len = input_ids.size(1)
         else:
             input_ids = inputs['input_ids']
             batch_size = input_ids.size(0)
+            seq_len = input_ids.size(1)
         
-        outputs = torch.randn(batch_size, input_ids.size(1), 512)
-        targets = torch.randn(batch_size, input_ids.size(1), 512)
+        with torch.no_grad():
+            if hasattr(self.model, 'forward'):
+                try:
+                    model_outputs = self.model(input_ids)
+                    if hasattr(model_outputs, 'logits'):
+                        outputs = model_outputs.logits
+                    else:
+                        outputs = model_outputs
+                except:
+                    outputs = torch.randn(batch_size, seq_len, 512, device=input_ids.device)
+            else:
+                outputs = torch.randn(batch_size, seq_len, 512, device=input_ids.device)
         
-        return compute_reward_function(outputs, targets)
+        targets = torch.nn.functional.one_hot(input_ids, num_classes=outputs.size(-1)).float()
+        
+        reward_config = {
+            'accuracy_weight': 0.4,
+            'fluency_weight': 0.25,
+            'relevance_weight': 0.2,
+            'safety_weight': 0.1,
+            'diversity_weight': 0.05
+        }
+        
+        return compute_reward_function(outputs, targets, reward_config)
     
     def _compute_advantages(self, rewards):
         """Compute advantages from rewards."""
@@ -307,17 +329,38 @@ class EnhancedGRPOTrainer:
             return inputs['attention_mask'].sum(dim=1).float()
     
     def _compute_additional_losses(self, rewards, advantages, k_next):
-        """Compute additional loss terms."""
-        return 0.01 * rewards.mean()
+        """Compute advanced additional loss terms with regularization."""
+        reward_loss = 0.01 * rewards.mean()
+        
+        advantage_var_loss = 0.005 * torch.var(advantages) if len(advantages) > 1 else torch.tensor(0.0)
+        
+        k_regularization = 0.001 * torch.abs(k_next - self.args.k_min - (self.args.k_max - self.args.k_min) / 2)
+        
+        entropy_loss = -self.args.entropy_bonus * torch.mean(torch.log(torch.abs(rewards) + 1e-8))
+        
+        total_additional_loss = reward_loss + advantage_var_loss + k_regularization + entropy_loss
+        
+        return total_additional_loss
     
     def _calculate_dynamic_learning_rate(self, rewards, pruning_ratio):
-        """Calculate dynamic learning rate based on rewards and pruning ratio."""
-        base_lr = 1e-4
-        reward_factor = rewards.mean().item()
-        pruning_factor = pruning_ratio.item() if hasattr(pruning_ratio, 'item') else pruning_ratio
+        """Calculate advanced dynamic learning rate with momentum and adaptive scaling."""
+        base_lr = self.args.learning_rate
         
-        dynamic_lr = base_lr * (1.0 + reward_factor) * (1.0 - 0.5 * pruning_factor)
-        return max(dynamic_lr, base_lr * 0.1)  # Minimum learning rate
+        reward_mean = rewards.mean().item()
+        reward_std = rewards.std().item() if len(rewards) > 1 else 0.1
+        reward_factor = torch.tanh(torch.tensor(reward_mean / (reward_std + 1e-8))).item()
+        
+        pruning_factor = pruning_ratio.item() if hasattr(pruning_ratio, 'item') else pruning_ratio
+        pruning_adjustment = torch.exp(torch.tensor(-pruning_factor * 2.0)).item()
+        
+        velocity_factor = 1.0 + 0.1 * torch.tanh(torch.tensor(self.kf.velocity, dtype=torch.float32)).item()
+        
+        dynamic_lr = base_lr * (1.0 + 0.5 * reward_factor) * pruning_adjustment * velocity_factor
+        
+        min_lr = base_lr * 0.01
+        max_lr = base_lr * 10.0
+        
+        return max(min_lr, min(dynamic_lr, max_lr))
     
     def _update_metrics(self, rewards, pruning_ratio, length_penalties, lr):
         """Update training metrics."""
