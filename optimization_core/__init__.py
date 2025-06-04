@@ -88,6 +88,12 @@ from .memory_optimizations import MemoryOptimizer, MemoryOptimizationConfig, cre
 from .computational_optimizations import FusedAttention, BatchOptimizer, ComputationalOptimizer, create_computational_optimizer
 from .optimization_profiles import OptimizationProfile, get_optimization_profiles, apply_optimization_profile
 
+from .hybrid_optimization_core import (
+    HybridOptimizationCore, HybridOptimizationConfig, CandidateSelector,
+    HybridOptimizationStrategy, HybridRLOptimizer, PolicyNetwork, ValueNetwork,
+    OptimizationEnvironment, create_hybrid_optimization_core
+)
+
 __all__ = [
     'OptimizedLayerNorm',
     'OptimizedRMSNorm',
@@ -284,7 +290,17 @@ __all__ = [
     'ActivationCache',
     'GradientCache',
     'MemoryPoolingOptimizer',
-    'create_memory_pooling_optimizer'
+    'create_memory_pooling_optimizer',
+    
+    'HybridOptimizationCore',
+    'HybridOptimizationConfig',
+    'CandidateSelector',
+    'HybridOptimizationStrategy',
+    'HybridRLOptimizer',
+    'PolicyNetwork',
+    'ValueNetwork',
+    'OptimizationEnvironment',
+    'create_hybrid_optimization_core'
 ]
 
-__version__ = "12.0.0"
+__version__ = "13.0.0"

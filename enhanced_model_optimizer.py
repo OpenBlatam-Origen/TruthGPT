@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'optimization_core'))
 import torch
 import torch.nn as nn
 from typing import Dict, Any, List, Optional, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import time
 import psutil
 import json
@@ -77,6 +77,14 @@ class UniversalOptimizationConfig:
     enable_mixed_precision: bool = True
     enable_automatic_scaling: bool = True
     enable_dynamic_batching: bool = True
+    
+    enable_hybrid_optimization: bool = True
+    enable_candidate_selection: bool = True
+    enable_ensemble_optimization: bool = True
+    num_candidates: int = 5
+    hybrid_strategies: List[str] = field(default_factory=lambda: [
+        'kernel_fusion', 'quantization', 'memory_pooling', 'attention_fusion'
+    ])
 
 class UniversalModelOptimizer:
     """Universal optimizer that can enhance any TruthGPT model."""
@@ -152,8 +160,139 @@ class UniversalModelOptimizer:
             'use_triton_kernels': self.config.use_triton_kernels
         }
         
-        optimizer = create_computational_optimizer(comp_config)
-        return optimizer.optimize_model(model)
+        optimizations_applied = []
+        
+        try:
+            from optimization_core.computational_optimizations import create_computational_optimizer
+            comp_optimizer = create_computational_optimizer(comp_config)
+            model = comp_optimizer.optimize_model(model)
+            optimizations_applied.append("computational_optimizations")
+        except ImportError:
+            logger.warning("Computational optimizations not available")
+        
+        if self.config.enable_kernel_fusion:
+            try:
+                from optimization_core.advanced_kernel_fusion import create_kernel_fusion_optimizer
+                fusion_optimizer = create_kernel_fusion_optimizer({})
+                model = fusion_optimizer.apply_kernel_fusion(model, {
+                    'fuse_layernorm_linear': True,
+                    'fuse_attention_mlp': True
+                })
+                optimizations_applied.append("kernel_fusion")
+            except ImportError:
+                logger.warning("Kernel fusion optimizations not available")
+        
+        if self.config.enable_quantization:
+            try:
+                from optimization_core.advanced_quantization import create_quantization_optimizer
+                quant_optimizer = create_quantization_optimizer({
+                    'quantization_bits': self.config.quantization_bits,
+                    'dynamic_quantization': True,
+                    'quantize_weights': True,
+                    'quantize_activations': False
+                })
+                model = quant_optimizer.optimize_model(model)
+                optimizations_applied.append("advanced_quantization")
+            except ImportError:
+                logger.warning("Advanced quantization optimizations not available")
+        
+        if self.config.use_fused_attention:
+            try:
+                from optimization_core.memory_pooling import create_memory_pooling_optimizer
+                memory_optimizer = create_memory_pooling_optimizer({
+                    'tensor_pool_size': 1000,
+                    'activation_cache_size': 100,
+                    'enable_tensor_pooling': True,
+                    'enable_activation_caching': True
+                })
+                model = memory_optimizer.optimize_model(model)
+                optimizations_applied.append("memory_pooling")
+            except ImportError:
+                logger.warning("Memory pooling optimizations not available")
+        
+        if self.config.use_triton_kernels:
+            try:
+                from optimization_core.enhanced_cuda_kernels import create_enhanced_cuda_optimizer
+                cuda_optimizer = create_enhanced_cuda_optimizer({
+                    'adaptive_block_sizing': True,
+                    'occupancy_optimization': True,
+                    'kernel_fusion': True,
+                    'memory_coalescing': True
+                })
+                model, cuda_report = cuda_optimizer.optimize_model_advanced(model)
+                optimizations_applied.append("enhanced_cuda")
+                logger.info(f"Enhanced CUDA optimizations applied: {cuda_report.get('optimizations_applied', [])}")
+            except ImportError:
+                logger.warning("Enhanced CUDA optimizations not available")
+        
+        try:
+            from optimization_core.ultra_optimization_core import create_ultra_optimization_core
+            ultra_optimizer = create_ultra_optimization_core({
+                'enable_adaptive_quantization': True,
+                'enable_dynamic_fusion': True,
+                'use_welford': True,
+                'use_fast_math': True,
+                'quantization_bits': self.config.quantization_bits,
+                'max_memory_mb': 8000
+            })
+            model, ultra_report = ultra_optimizer.ultra_optimize_model(model)
+            optimizations_applied.append("ultra_optimization")
+            logger.info(f"Ultra optimizations applied: {ultra_report.get('layers_optimized', 0)} layers optimized")
+        except ImportError:
+            logger.warning("Ultra optimization core not available")
+        
+        try:
+            from optimization_core.super_optimization_core import create_super_optimization_core
+            super_optimizer = create_super_optimization_core({
+                'use_flash_attention': True,
+                'use_sparse_attention': True,
+                'sparsity_ratio': 0.1,
+                'use_gated_mlp': True,
+                'use_mixture_of_experts': self.config.use_mixture_of_experts,
+                'num_experts': 8,
+                'use_adaptive_computation': False,
+                'use_progressive_optimization': True
+            })
+            model, super_report = super_optimizer.super_optimize_model(model)
+            optimizations_applied.append("super_optimization")
+            logger.info(f"Super optimizations applied: {super_report.get('super_optimizations_applied', 0)} components optimized")
+        except ImportError:
+            logger.warning("Super optimization core not available")
+        
+        try:
+            from optimization_core.meta_optimization_core import create_meta_optimization_core
+            meta_optimizer = create_meta_optimization_core({
+                'adaptation_rate': 0.01,
+                'use_adaptive_scheduling': True,
+                'use_dynamic_graph_optimization': True
+            })
+            model, meta_report = meta_optimizer.meta_optimize_model(model)
+            optimizations_applied.append("meta_optimization")
+            logger.info(f"Meta optimizations applied: {meta_report.get('meta_optimizations_applied', 0)} meta-optimizations")
+        except ImportError:
+            logger.warning("Meta optimization core not available")
+        
+        try:
+            from optimization_core.hyper_optimization_core import create_hyper_optimization_core
+            hyper_optimizer = create_hyper_optimization_core({
+                'use_neural_arch_optimization': True,
+                'efficiency_threshold': 0.8,
+                'use_low_rank': True,
+                'rank_ratio': 0.5,
+                'use_weight_sharing': False,
+                'use_advanced_gradients': True,
+                'use_weight_orthogonalization': True,
+                'use_weight_normalization': True
+            })
+            
+            sample_input = torch.randn(1, 512)
+            model, hyper_report = hyper_optimizer.hyper_optimize_model(model, sample_input)
+            optimizations_applied.append("hyper_optimization")
+            logger.info(f"Hyper optimizations applied: {hyper_report.get('hyper_optimizations_applied', 0)} hyper-optimizations")
+        except ImportError:
+            logger.warning("Hyper optimization core not available")
+        
+        return model
     
     def _apply_advanced_optimizations(self, model: nn.Module) -> nn.Module:
         """Apply advanced optimizations like MCTS and RL pruning."""
@@ -479,9 +618,16 @@ class UniversalModelOptimizer:
         return model
     
     def _enable_mixed_precision(self, model: nn.Module) -> nn.Module:
-        """Enable mixed precision training."""
-        if hasattr(model, 'half'):
-            model = model.half()
+        """Enable mixed precision training with proper dtype handling."""
+        for name, module in model.named_modules():
+            if isinstance(module, (nn.LayerNorm, nn.BatchNorm1d, nn.BatchNorm2d)):
+                continue
+            elif hasattr(module, 'weight') and module.weight is not None:
+                if module.weight.dtype == torch.float32:
+                    module.weight.data = module.weight.data.half()
+            if hasattr(module, 'bias') and module.bias is not None:
+                if module.bias.dtype == torch.float32:
+                    module.bias.data = module.bias.data.half()
         return model
     
     def _enable_automatic_scaling(self, model: nn.Module) -> nn.Module:
