@@ -48,8 +48,9 @@ class UltraOptimizedTransformerLayer(nn.Module):
         
         self.mlp = UltraOptimizedMLP(args)
         
-        self.input_layernorm = nn.LayerNorm(args.hidden_size, eps=1e-5)
-        self.post_attention_layernorm = nn.LayerNorm(args.hidden_size, eps=1e-5)
+        from optimization_core import OptimizedLayerNorm
+        self.input_layernorm = OptimizedLayerNorm(args.hidden_size, eps=1e-5)
+        self.post_attention_layernorm = OptimizedLayerNorm(args.hidden_size, eps=1e-5)
         
         self.use_fused_ops = args.enable_ultra_fusion
         

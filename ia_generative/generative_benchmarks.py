@@ -11,6 +11,43 @@ from dataclasses import dataclass
 import numpy as np
 
 @dataclass
+class QualityMetrics:
+    """Quality metrics for generative models."""
+    perplexity: float = 0.0
+    bleu_score: float = 0.0
+    rouge_score: float = 0.0
+    diversity_score: float = 0.0
+    coherence_score: float = 0.0
+
+@dataclass
+class PerformanceMetrics:
+    """Performance metrics for generative models."""
+    latency_ms: float = 0.0
+    throughput_tokens_per_sec: float = 0.0
+    memory_usage_mb: float = 0.0
+    gpu_utilization: float = 0.0
+    tokens_generated: int = 0
+
+class HumanEvaluationSimulator:
+    """Simulator for human evaluation metrics."""
+    
+    def __init__(self):
+        self.quality_threshold = 0.7
+        self.coherence_threshold = 0.8
+        
+    def evaluate_quality(self, generated_text: str) -> float:
+        """Simulate human quality evaluation."""
+        return min(1.0, len(generated_text) / 100.0)
+    
+    def evaluate_coherence(self, generated_text: str) -> float:
+        """Simulate human coherence evaluation."""
+        return min(1.0, len(set(generated_text.split())) / 50.0)
+    
+    def evaluate_relevance(self, generated_text: str, prompt: str) -> float:
+        """Simulate human relevance evaluation."""
+        return 0.8  # Mock implementation
+
+@dataclass
 class GenerativeBenchmarkConfig:
     """Configuration for generative benchmarking."""
     batch_sizes: List[int] = None

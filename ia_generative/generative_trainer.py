@@ -266,6 +266,54 @@ class GenerativeTrainer:
         torch.save(checkpoint, os.path.join(checkpoint_dir, 'checkpoint.pt'))
         self.logger.info(f"Checkpoint saved to {checkpoint_dir}")
 
+class AdversarialTrainer:
+    """Adversarial training for generative models."""
+    
+    def __init__(self, generator, discriminator, lr=1e-4):
+        self.generator = generator
+        self.discriminator = discriminator
+        self.gen_optimizer = optim.Adam(generator.parameters(), lr=lr)
+        self.disc_optimizer = optim.Adam(discriminator.parameters(), lr=lr)
+        
+    def train_step(self, real_data, fake_data):
+        """Single training step for adversarial training."""
+        self.disc_optimizer.zero_grad()
+        real_loss = nn.BCELoss()(self.discriminator(real_data), torch.ones_like(real_data[:, 0]))
+        fake_loss = nn.BCELoss()(self.discriminator(fake_data.detach()), torch.zeros_like(fake_data[:, 0]))
+        disc_loss = (real_loss + fake_loss) / 2
+        disc_loss.backward()
+        self.disc_optimizer.step()
+        
+        self.gen_optimizer.zero_grad()
+        gen_loss = nn.BCELoss()(self.discriminator(fake_data), torch.ones_like(fake_data[:, 0]))
+        gen_loss.backward()
+        self.gen_optimizer.step()
+        
+        return {'disc_loss': disc_loss.item(), 'gen_loss': gen_loss.item()}
+class CurriculumLearning:
+    """Curriculum learning for progressive training difficulty."""
+    
+    def __init__(self, initial_difficulty=0.1, max_difficulty=1.0, step_size=0.1):
+        self.current_difficulty = initial_difficulty
+        self.max_difficulty = max_difficulty
+        self.step_size = step_size
+        
+    def update_difficulty(self, performance_metric):
+        """Update curriculum difficulty based on performance."""
+        if performance_metric > 0.8:  # Good performance, increase difficulty
+            self.current_difficulty = min(self.max_difficulty, 
+                                        self.current_difficulty + self.step_size)
+        elif performance_metric < 0.5:  # Poor performance, decrease difficulty
+            self.current_difficulty = max(0.1, 
+                                        self.current_difficulty - self.step_size)
+        return self.current_difficulty
+    
+    def get_current_difficulty(self):
+        """Get current curriculum difficulty level."""
+        return self.current_difficulty
+
+
+
 def create_generative_trainer(model: nn.Module, 
                             config: Dict[str, Any],
                             tokenizer: Optional[Any] = None) -> GenerativeTrainer:
