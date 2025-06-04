@@ -40,13 +40,23 @@ class RLPruningAgent:
 
     def _build_network(self):
         """Build Q-network for RL agent."""
-        return nn.Sequential(
-            nn.Linear(self.state_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, self.action_dim)
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            return nn.Sequential(
+                EnhancedLinear(self.state_dim, 128),
+                nn.ReLU(),
+                EnhancedLinear(128, 128),
+                nn.ReLU(),
+                EnhancedLinear(128, self.action_dim)
+            )
+        except ImportError:
+            return nn.Sequential(
+                nn.Linear(self.state_dim, 128),
+                nn.ReLU(),
+                nn.Linear(128, 128),
+                nn.ReLU(),
+                nn.Linear(128, self.action_dim)
+            )
 
     def get_state(self, layer: nn.Module) -> torch.Tensor:
         """Extract state features from a neural network layer."""

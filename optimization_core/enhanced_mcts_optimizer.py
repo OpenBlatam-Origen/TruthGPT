@@ -35,12 +35,18 @@ class SimplePolicyNetwork(nn.Module):
     
     def __init__(self, input_dim: int = 8, hidden_dim: int = 64, output_dim: int = 16):
         super().__init__()
+        try:
+            from optimization_core.cuda_kernels import OptimizedLinear
+            linear_layer = OptimizedLinear
+        except ImportError:
+            linear_layer = nn.Linear
+        
         self.network = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
+            linear_layer(input_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
+            linear_layer(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, output_dim),
+            linear_layer(hidden_dim, output_dim),
             nn.Softmax(dim=-1)
         )
     
@@ -52,12 +58,18 @@ class SimpleValueNetwork(nn.Module):
     
     def __init__(self, input_dim: int = 8, hidden_dim: int = 64):
         super().__init__()
+        try:
+            from optimization_core.cuda_kernels import OptimizedLinear
+            linear_layer = OptimizedLinear
+        except ImportError:
+            linear_layer = nn.Linear
+        
         self.network = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
+            linear_layer(input_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
+            linear_layer(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, 1),
+            linear_layer(hidden_dim, 1),
             nn.Tanh()
         )
     

@@ -17,8 +17,13 @@ class FusedAttention(nn.Module):
         self.head_dim = hidden_size // num_heads
         self.dropout = dropout
         
-        self.qkv_proj = nn.Linear(hidden_size, hidden_size * 3, bias=False)
-        self.out_proj = nn.Linear(hidden_size, hidden_size, bias=False)
+        try:
+            from optimization_core.cuda_kernels import OptimizedLinear
+            self.qkv_proj = OptimizedLinear(hidden_size, hidden_size * 3, bias=False)
+            self.out_proj = OptimizedLinear(hidden_size, hidden_size, bias=False)
+        except ImportError:
+            self.qkv_proj = nn.Linear(hidden_size, hidden_size * 3, bias=False)
+            self.out_proj = nn.Linear(hidden_size, hidden_size, bias=False)
         
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """Fused QKV projection and attention computation."""
