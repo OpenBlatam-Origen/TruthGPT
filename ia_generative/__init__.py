@@ -4,7 +4,7 @@ IA-Generative integration module for enhanced AI capabilities.
 
 from .text_generator import (
     EnhancedTextGenerator, ConditionalTextGenerator, 
-    StreamingTextGenerator, create_enhanced_text_generator
+    StreamingTextGenerator, create_enhanced_text_generator, create_text_generator
 )
 from .image_generator import (
     DiffusionImageGenerator, BrandConsistentImageGenerator,
@@ -32,6 +32,7 @@ __all__ = [
     'ConditionalTextGenerator', 
     'StreamingTextGenerator',
     'create_enhanced_text_generator',
+    'create_text_generator',
     'DiffusionImageGenerator',
     'BrandConsistentImageGenerator',
     'LayoutGenerator',

@@ -48,7 +48,11 @@ class MultiModalEncoder(nn.Module):
             torch.randn(args.max_sequence_length, args.hidden_size)
         )
         
-        self.layer_norm = nn.LayerNorm(args.hidden_size)
+        try:
+            from optimization_core import OptimizedLayerNorm
+            self.layer_norm = OptimizedLayerNorm(args.hidden_size)
+        except ImportError:
+            self.layer_norm = nn.LayerNorm(args.hidden_size)
         self.dropout = nn.Dropout(args.dropout)
         
     def forward(self, visual_features, audio_features, text_features, engagement_features):
@@ -131,8 +135,13 @@ class ViralDetectorLayer(nn.Module):
             nn.Linear(args.hidden_size * 4, args.hidden_size),
             nn.Dropout(args.dropout)
         )
-        self.layer_norm1 = nn.LayerNorm(args.hidden_size)
-        self.layer_norm2 = nn.LayerNorm(args.hidden_size)
+        try:
+            from optimization_core import OptimizedLayerNorm
+            self.layer_norm1 = OptimizedLayerNorm(args.hidden_size)
+            self.layer_norm2 = OptimizedLayerNorm(args.hidden_size)
+        except ImportError:
+            self.layer_norm1 = nn.LayerNorm(args.hidden_size)
+            self.layer_norm2 = nn.LayerNorm(args.hidden_size)
         
     def forward(self, x, mask=None):
         attn_output, attn_weights = self.attention(x, mask)
@@ -171,7 +180,11 @@ class ViralVideoClipper(nn.Module):
             nn.Linear(args.hidden_size // 2, 2)  # Start and end probabilities
         )
         
-        self.layer_norm = nn.LayerNorm(args.hidden_size)
+        try:
+            from optimization_core import OptimizedLayerNorm
+            self.layer_norm = OptimizedLayerNorm(args.hidden_size)
+        except ImportError:
+            self.layer_norm = nn.LayerNorm(args.hidden_size)
         
     def forward(self, visual_features, audio_features, text_features, engagement_features, mask=None):
         """

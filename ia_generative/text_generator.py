@@ -400,3 +400,7 @@ def create_enhanced_text_generator(config: Dict[str, Any]) -> EnhancedTextGenera
     )
     
     return EnhancedTextGenerator(args)
+
+def create_text_generator(config: Dict[str, Any]) -> EnhancedTextGenerator:
+    """Create text generator from configuration (alias for create_enhanced_text_generator)."""
+    return create_enhanced_text_generator(config)

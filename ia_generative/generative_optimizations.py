@@ -43,6 +43,7 @@ class ProgressiveGeneration(nn.Module):
         self.base_model = base_model
         self.progressive_steps = progressive_steps
         
+        from optimization_core import OptimizedLayerNorm
         self.progressive_heads = nn.ModuleList([
             nn.Linear(base_model.args.hidden_size if hasattr(base_model, 'args') else 768, 
                      base_model.args.vocab_size if hasattr(base_model, 'args') else 50000)
