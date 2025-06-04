@@ -42,6 +42,19 @@ def optimize_deepseek_v3():
         
         model = create_deepseek_v3_model(config)
         
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'enable_gradient_checkpointing': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True,
+                'use_mcts_optimization': True
+            })
+            model = optimizer.optimize_model(model, "DeepSeek-V3")
+        except ImportError:
+            pass
+        
         advanced_config = get_advanced_optimization_config('deepseek_v3')
         optimized_model = apply_advanced_optimizations(model, advanced_config)
         
@@ -97,6 +110,19 @@ def optimize_qwen_variant():
         
         model = create_qwen_model(config)
         
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'enable_gradient_checkpointing': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True,
+                'use_mcts_optimization': True
+            })
+            model = optimizer.optimize_model(model, "Qwen-Model")
+        except ImportError:
+            pass
+        
         advanced_config = get_advanced_optimization_config('qwen')
         optimized_model = apply_advanced_optimizations(model, advanced_config)
         
@@ -129,6 +155,19 @@ def optimize_viral_clipper():
         }
         
         model = create_viral_clipper_model(config)
+        
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'enable_gradient_checkpointing': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True,
+                'use_mcts_optimization': True
+            })
+            model = optimizer.optimize_model(model, "Viral-Clipper")
+        except ImportError:
+            pass
         
         advanced_config = get_advanced_optimization_config('viral_clipper')
         optimized_model = apply_advanced_optimizations(model, advanced_config)

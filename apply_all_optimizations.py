@@ -17,13 +17,33 @@ def test_optimization_application():
     """Test applying optimizations to a sample model."""
     print("🔧 Probando aplicación de optimizaciones...")
     
-    test_model = torch.nn.Sequential(
-        torch.nn.Linear(512, 1024),
-        torch.nn.ReLU(),
-        torch.nn.Linear(1024, 512),
-        torch.nn.ReLU(),
-        torch.nn.Linear(512, 100)
-    )
+    try:
+        from optimization_core.enhanced_mlp import OptimizedLinear
+        test_model = torch.nn.Sequential(
+            OptimizedLinear(512, 1024),
+            torch.nn.ReLU(),
+            OptimizedLinear(1024, 512),
+            torch.nn.ReLU(),
+            OptimizedLinear(512, 100)
+        )
+    except ImportError:
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            test_model = torch.nn.Sequential(
+                EnhancedLinear(512, 1024),
+                torch.nn.ReLU(),
+                EnhancedLinear(1024, 512),
+                torch.nn.ReLU(),
+                EnhancedLinear(512, 100)
+            )
+        except ImportError:
+            test_model = torch.nn.Sequential(
+                torch.nn.Linear(512, 1024),
+                torch.nn.ReLU(),
+                torch.nn.Linear(1024, 512),
+                torch.nn.ReLU(),
+                torch.nn.Linear(512, 100)
+            )
     
     print(f"Modelo original: {sum(p.numel() for p in test_model.parameters()):,} parámetros")
     

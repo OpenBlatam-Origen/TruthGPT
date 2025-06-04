@@ -90,6 +90,32 @@ class ModelRegistry:
         ))
         
         self.register_model(ModelInfo(
+            name="TruthGPT-Llama-3.1-405B",
+            model_type=ModelType.TRUTHGPT,
+            category=ModelCategory.LANGUAGE_MODEL,
+            parameters=405_000_000_000,
+            context_length=131072,
+            provider="TruthGPT",
+            local_path="/home/ubuntu/TruthGPT/Frontier-Model-run/models/llama_3_1_405b.py",
+            description="Native Llama-3.1-405B implementation with GQA and scaled RoPE",
+            capabilities=["text_generation", "reasoning", "code_generation", "long_context"],
+            license="MIT"
+        ))
+        
+        self.register_model(ModelInfo(
+            name="TruthGPT-Claude-3.5-Sonnet",
+            model_type=ModelType.TRUTHGPT,
+            category=ModelCategory.LANGUAGE_MODEL,
+            parameters=175_000_000_000,
+            context_length=200000,
+            provider="TruthGPT",
+            local_path="/home/ubuntu/TruthGPT/Frontier-Model-run/models/claude_3_5_sonnet.py",
+            description="Native Claude-3.5-Sonnet implementation with Constitutional AI",
+            capabilities=["text_generation", "reasoning", "constitutional_ai", "safety"],
+            license="MIT"
+        ))
+        
+        self.register_model(ModelInfo(
             name="TruthGPT-Qwen-Optimized",
             model_type=ModelType.TRUTHGPT,
             category=ModelCategory.REASONING,
