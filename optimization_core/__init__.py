@@ -17,7 +17,9 @@ from .positional_encodings import RotaryEmbedding, LlamaRotaryEmbedding, FixedLl
 from .enhanced_mlp import SwiGLU, GatedMLP, MixtureOfExperts, AdaptiveMLP, EnhancedMLPOptimizations, create_swiglu, create_gated_mlp, create_mixture_of_experts, create_adaptive_mlp
 from .rl_pruning import RLPruning, RLPruningAgent, RLPruningOptimizations, create_rl_pruning, create_rl_pruning_agent
 from .optimization_registry import OptimizationRegistry, apply_optimizations, get_optimization_config, register_optimization, get_optimization_report
-from .advanced_optimization_registry import AdvancedOptimizationConfig, get_advanced_optimization_config, apply_advanced_optimizations, get_advanced_optimization_report
+from .advanced_optimization_registry_v2 import AdvancedOptimizationConfig, get_advanced_optimization_config, apply_advanced_optimizations, get_advanced_optimization_report
+from .enhanced_mcts_optimizer import EnhancedMCTSWithBenchmarks, EnhancedMCTSBenchmarkArgs, create_enhanced_mcts_with_benchmarks, benchmark_mcts_comparison
+from .olympiad_benchmarks import OlympiadBenchmarkSuite, OlympiadBenchmarkConfig, OlympiadProblem, ProblemCategory, DifficultyLevel, get_olympiad_benchmark_config, create_olympiad_benchmark_suite
 
 __all__ = [
     'OptimizedLayerNorm',
@@ -87,7 +89,18 @@ __all__ = [
     'AdvancedOptimizationConfig',
     'get_advanced_optimization_config',
     'apply_advanced_optimizations',
-    'get_advanced_optimization_report'
+    'get_advanced_optimization_report',
+    'EnhancedMCTSWithBenchmarks',
+    'EnhancedMCTSBenchmarkArgs',
+    'create_enhanced_mcts_with_benchmarks',
+    'benchmark_mcts_comparison',
+    'OlympiadBenchmarkSuite',
+    'OlympiadBenchmarkConfig',
+    'OlympiadProblem',
+    'ProblemCategory',
+    'DifficultyLevel',
+    'get_olympiad_benchmark_config',
+    'create_olympiad_benchmark_suite'
 ]
 
 __version__ = "3.0.0"

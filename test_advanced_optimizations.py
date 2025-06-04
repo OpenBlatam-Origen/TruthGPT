@@ -4,6 +4,7 @@ Comprehensive test suite for advanced optimization components.
 
 import torch
 import torch.nn as nn
+import random
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -153,7 +154,7 @@ def test_optimization_integration():
     print("\n🧪 Testing Optimization Integration...")
     
     try:
-        from optimization_core.advanced_optimization_registry import get_advanced_optimization_config
+        from optimization_core.advanced_optimization_registry_v2 import get_advanced_optimization_config
         
         config = get_advanced_optimization_config('ultra_optimized')
         assert config.enable_advanced_normalization == True
@@ -171,6 +172,106 @@ def test_optimization_integration():
         
     except Exception as e:
         print(f"❌ Optimization integration test failed: {e}")
+        return False
+
+def test_enhanced_mcts():
+    """Test enhanced MCTS with neural guidance."""
+    print("\n🧪 Testing Enhanced MCTS...")
+    
+    try:
+        from optimization_core.mcts_optimization import NeuralGuidedMCTSArgs, create_enhanced_mcts_optimizer
+        
+        args = NeuralGuidedMCTSArgs(
+            use_neural_guidance=True,
+            entropy_weight=0.1,
+            pruning_threshold=0.01,
+            fe_max=20,
+            init_size=3
+        )
+        
+        def mock_objective(config):
+            return random.uniform(0.1, 1.0)
+        
+        optimizer = create_enhanced_mcts_optimizer(mock_objective, args)
+        best_config, best_score = optimizer.optimize()
+        
+        assert isinstance(best_config, dict)
+        assert isinstance(best_score, float)
+        print("✅ Enhanced MCTS optimization working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Enhanced MCTS test failed: {e}")
+        return False
+
+def test_olympiad_benchmarks():
+    """Test olympiad benchmark generation."""
+    print("\n🧪 Testing Olympiad Benchmarks...")
+    
+    try:
+        from optimization_core.olympiad_benchmarks import (
+            AlgebraProblemGenerator, NumberTheoryProblemGenerator,
+            DifficultyLevel, ProblemCategory, create_olympiad_benchmark_suite
+        )
+        
+        algebra_gen = AlgebraProblemGenerator()
+        problem = algebra_gen.generate_polynomial_problem(DifficultyLevel.AMC_12)
+        
+        assert problem.category == ProblemCategory.ALGEBRA
+        assert problem.difficulty == DifficultyLevel.AMC_12
+        assert len(problem.statement) > 0
+        assert len(problem.latex_statement) > 0
+        print("✅ Algebra problem generation working")
+        
+        nt_gen = NumberTheoryProblemGenerator()
+        nt_problem = nt_gen.generate_modular_arithmetic_problem(DifficultyLevel.AIME)
+        
+        assert nt_problem.category == ProblemCategory.NUMBER_THEORY
+        print("✅ Number theory problem generation working")
+        
+        benchmark_suite = create_olympiad_benchmark_suite('deepseek_v3')
+        problems = benchmark_suite.generate_problem_set()
+        assert len(problems) > 0
+        print(f"✅ Benchmark suite generated {len(problems)} problems")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Olympiad benchmarks test failed: {e}")
+        return False
+
+def test_enhanced_mcts_with_benchmarks():
+    """Test enhanced MCTS with olympiad benchmarking integration."""
+    print("\n🧪 Testing Enhanced MCTS with Benchmarks...")
+    
+    try:
+        from optimization_core.enhanced_mcts_optimizer import create_enhanced_mcts_with_benchmarks
+        
+        def mock_objective(config):
+            return random.uniform(0.1, 1.0)
+        
+        optimizer = create_enhanced_mcts_with_benchmarks(mock_objective, 'deepseek_v3')
+        optimizer.args.mcts_args.fe_max = 10
+        optimizer.args.mcts_args.init_size = 2
+        optimizer.args.benchmark_config.problems_per_category = 2
+        
+        best_config, best_score, stats = optimizer.optimize_with_benchmarks()
+        
+        assert isinstance(best_config, dict)
+        assert isinstance(best_score, float)
+        assert isinstance(stats, dict)
+        assert 'benchmark_results' in stats
+        print("✅ Enhanced MCTS with benchmarks working")
+        
+        report = optimizer.get_optimization_report()
+        assert len(report) > 0
+        print("✅ Optimization report generation working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Enhanced MCTS with benchmarks test failed: {e}")
         return False
 
 def test_model_compatibility():
@@ -211,6 +312,9 @@ def main():
         test_positional_encodings,
         test_enhanced_mlp,
         test_rl_pruning,
+        test_enhanced_mcts,
+        test_olympiad_benchmarks,
+        test_enhanced_mcts_with_benchmarks,
         test_optimization_integration,
         test_model_compatibility
     ]
