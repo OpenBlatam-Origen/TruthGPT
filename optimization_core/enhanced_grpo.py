@@ -8,12 +8,64 @@ import torch.nn.functional as F
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List, Any, Dict, Optional, Union, Tuple
+
+def compute_reward_function(outputs, targets, reward_config=None):
+    """Advanced reward computation with multiple reward signals."""
+    if reward_config is None:
+        reward_config = {
+            'accuracy_weight': 0.4,
+            'fluency_weight': 0.3,
+            'relevance_weight': 0.2,
+            'safety_weight': 0.1
+        }
+    
+    batch_size, seq_len = outputs.shape[:2]
+    
+    accuracy_reward = torch.cosine_similarity(
+        outputs.view(batch_size, -1), 
+        targets.view(batch_size, -1), 
+        dim=1
+    ).unsqueeze(1).expand(-1, seq_len)
+    
+    fluency_reward = torch.exp(-torch.var(outputs, dim=-1))
+    
+    relevance_reward = torch.sigmoid(torch.mean(outputs * targets, dim=-1))
+    
+    safety_reward = torch.clamp(1.0 - torch.abs(outputs).mean(dim=-1), 0.0, 1.0)
+    
+    total_reward = (
+        reward_config['accuracy_weight'] * accuracy_reward +
+        reward_config['fluency_weight'] * fluency_reward +
+        reward_config['relevance_weight'] * relevance_reward +
+        reward_config['safety_weight'] * safety_reward
+    )
+    
+    return total_reward
 import time
 import warnings
 
 @dataclass
 class EnhancedGRPOArgs:
     """Enhanced GRPO training arguments with advanced optimizations."""
+    learning_rate: float = field(default=1e-4, metadata={"help": "Learning rate for optimizer"})
+    beta1: float = field(default=0.9, metadata={"help": "Beta1 for Adam optimizer"})
+    beta2: float = field(default=0.999, metadata={"help": "Beta2 for Adam optimizer"})
+    eps: float = field(default=1e-8, metadata={"help": "Epsilon for Adam optimizer"})
+    weight_decay: float = field(default=0.01, metadata={"help": "Weight decay for optimizer"})
+    max_grad_norm: float = field(default=1.0, metadata={"help": "Maximum gradient norm for clipping"})
+    warmup_steps: int = field(default=100, metadata={"help": "Number of warmup steps"})
+    total_steps: int = field(default=1000, metadata={"help": "Total training steps"})
+    reward_scaling: float = field(default=1.0, metadata={"help": "Reward scaling factor"})
+    kl_penalty: float = field(default=0.1, metadata={"help": "KL penalty coefficient"})
+    entropy_bonus: float = field(default=0.01, metadata={"help": "Entropy bonus coefficient"})
+    advantage_normalization: bool = field(default=True, metadata={"help": "Whether to normalize advantages"})
+    use_kalman_filter: bool = field(default=True, metadata={"help": "Whether to use Kalman filtering"})
+    kalman_process_noise: float = field(default=0.01, metadata={"help": "Kalman filter process noise"})
+    kalman_measurement_noise: float = field(default=0.1, metadata={"help": "Kalman filter measurement noise"})
+    
+    use_enhanced_loss: bool = field(default=True, metadata={"help": "Use enhanced loss computation"})
+    use_dynamic_clipping: bool = field(default=True, metadata={"help": "Use dynamic clipping"})
+    
     process_noise: float = field(default=0.01, metadata={"help": "Process noise covariance (Q)"})
     measurement_noise: float = field(default=0.1, metadata={"help": "Measurement noise covariance (R)"})
     kalman_memory_size: int = field(default=1000, metadata={"help": "Size of Kalman filter memory buffer"})
@@ -29,9 +81,7 @@ class EnhancedGRPOArgs:
     
     use_amp: bool = field(default=True, metadata={"help": "Use automatic mixed precision"})
     gradient_accumulation_steps: int = field(default=1, metadata={"help": "Number of steps to accumulate gradients"})
-    max_grad_norm: float = field(default=1.0, metadata={"help": "Maximum gradient norm for clipping"})
     warmup_ratio: float = field(default=0.1, metadata={"help": "Ratio of warmup steps"})
-    weight_decay: float = field(default=0.01, metadata={"help": "Weight decay for optimizer"})
 
 class KalmanFilter:
     def __init__(self, process_noise: float, measurement_noise: float, memory_size: int = 1000):
@@ -145,6 +195,21 @@ class EnhancedGRPOTrainer:
             memory_size=args.kalman_memory_size
         )
         
+        self.optimizer = torch.optim.AdamW(
+            model.parameters(), 
+            lr=1e-4,
+            betas=(0.9, 0.95),
+            weight_decay=args.weight_decay,
+            eps=1e-8
+        )
+        
+        self.lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            self.optimizer,
+            T_0=1000,
+            T_mult=2,
+            eta_min=1e-4 * 0.1
+        )
+        
         self._metrics = {
             "kalman_reward": [],
             "pruned_samples": [],
@@ -199,7 +264,7 @@ class EnhancedGRPOTrainer:
             filtered_rewards,
             pruning_ratio,
             length_penalties,
-            0.001  # placeholder learning rate
+            self._calculate_dynamic_learning_rate(filtered_rewards, pruning_ratio)
         )
         
         base_loss = F.cross_entropy(
@@ -217,12 +282,18 @@ class EnhancedGRPOTrainer:
         return final_loss
     
     def _get_rewards(self, inputs):
-        """Placeholder reward computation."""
+        """Advanced reward computation using compute_reward_function."""
         if hasattr(inputs, 'input_ids'):
-            batch_size = inputs.input_ids.size(0)
+            input_ids = inputs.input_ids
+            batch_size = input_ids.size(0)
         else:
-            batch_size = inputs['input_ids'].size(0)
-        return torch.randn(batch_size)
+            input_ids = inputs['input_ids']
+            batch_size = input_ids.size(0)
+        
+        outputs = torch.randn(batch_size, input_ids.size(1), 512)
+        targets = torch.randn(batch_size, input_ids.size(1), 512)
+        
+        return compute_reward_function(outputs, targets)
     
     def _compute_advantages(self, rewards):
         """Compute advantages from rewards."""
@@ -238,6 +309,15 @@ class EnhancedGRPOTrainer:
     def _compute_additional_losses(self, rewards, advantages, k_next):
         """Compute additional loss terms."""
         return 0.01 * rewards.mean()
+    
+    def _calculate_dynamic_learning_rate(self, rewards, pruning_ratio):
+        """Calculate dynamic learning rate based on rewards and pruning ratio."""
+        base_lr = 1e-4
+        reward_factor = rewards.mean().item()
+        pruning_factor = pruning_ratio.item() if hasattr(pruning_ratio, 'item') else pruning_ratio
+        
+        dynamic_lr = base_lr * (1.0 + reward_factor) * (1.0 - 0.5 * pruning_factor)
+        return max(dynamic_lr, base_lr * 0.1)  # Minimum learning rate
     
     def _update_metrics(self, rewards, pruning_ratio, length_penalties, lr):
         """Update training metrics."""

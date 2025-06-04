@@ -15,6 +15,66 @@ from .reward_functions import GRPORewardFunction, AdaptiveRewardFunction, MultiO
 from .advanced_normalization import AdvancedRMSNorm, LlamaRMSNorm, CRMSNorm, AdvancedNormalizationOptimizations, create_advanced_rms_norm, create_llama_rms_norm, create_crms_norm
 from .positional_encodings import RotaryEmbedding, LlamaRotaryEmbedding, FixedLlamaRotaryEmbedding, AliBi, SinusoidalPositionalEmbedding, PositionalEncodingOptimizations, create_rotary_embedding, create_llama_rotary_embedding, create_alibi, create_sinusoidal_embedding
 from .enhanced_mlp import SwiGLU, GatedMLP, MixtureOfExperts, AdaptiveMLP, EnhancedMLPOptimizations, create_swiglu, create_gated_mlp, create_mixture_of_experts, create_adaptive_mlp
+from .advanced_kernel_fusion import (
+    FusedLayerNormLinear, FusedAttentionMLP, KernelFusionOptimizer,
+    create_kernel_fusion_optimizer
+)
+from .advanced_quantization import (
+    QuantizedLinear, QuantizedLayerNorm, AdvancedQuantizationOptimizer,
+    create_quantization_optimizer
+)
+from .memory_pooling import (
+    TensorPool, ActivationCache, MemoryPoolingOptimizer,
+    create_memory_pooling_optimizer, get_global_tensor_pool, get_global_activation_cache
+)
+from .enhanced_cuda_kernels import (
+    AdvancedCUDAConfig, FusedKernelOptimizer, MemoryCoalescingOptimizer,
+    QuantizationKernelOptimizer, EnhancedCUDAOptimizations, create_enhanced_cuda_optimizer
+)
+from .ultra_optimization_core import (
+    UltraOptimizedLayerNorm, AdaptiveQuantization, DynamicKernelFusion,
+    IntelligentMemoryManager, UltraOptimizationCore, create_ultra_optimization_core
+)
+from .super_optimization_core import (
+    SuperOptimizedAttention, AdaptiveComputationTime, SuperOptimizedMLP,
+    ProgressiveOptimization, SuperOptimizationCore, create_super_optimization_core
+)
+from .meta_optimization_core import (
+    SelfOptimizingLayerNorm, AdaptiveOptimizationScheduler, DynamicComputationGraph,
+    MetaOptimizationCore, create_meta_optimization_core
+)
+from .hyper_optimization_core import (
+    HyperOptimizedLinear, NeuralArchitectureOptimizer, AdvancedGradientOptimizer,
+    HyperOptimizationCore, create_hyper_optimization_core
+)
+from .quantum_optimization_core import (
+    QuantumInspiredLinear, QuantumAttention, QuantumLayerNorm,
+    QuantumOptimizationCore, create_quantum_optimization_core
+)
+from .neural_architecture_search import (
+    ArchitectureGene, ArchitectureChromosome, NeuralArchitectureSearchOptimizer,
+    NASOptimizationCore, create_nas_optimization_core
+)
+from .enhanced_optimization_core import (
+    AdaptivePrecisionOptimizer, DynamicKernelFusionOptimizer, IntelligentMemoryManager,
+    SelfOptimizingComponent, EnhancedOptimizedLayerNorm, EnhancedOptimizationCore,
+    create_enhanced_optimization_core
+)
+from .ultra_enhanced_optimization_core import (
+    NeuralCodeOptimizer, AdaptiveAlgorithmSelector, PredictiveOptimizer,
+    SelfEvolvingKernel, RealTimeProfiler, UltraEnhancedOptimizationCore,
+    create_ultra_enhanced_optimization_core
+)
+from .mega_enhanced_optimization_core import (
+    AIOptimizationAgent, QuantumNeuralFusion, EvolutionaryOptimizer,
+    HardwareAwareOptimizer, MegaEnhancedOptimizationCore,
+    create_mega_enhanced_optimization_core
+)
+from .supreme_optimization_core import (
+    NeuralArchitectureOptimizer, DynamicComputationGraph, SelfModifyingOptimizer,
+    QuantumComputingSimulator, SupremeOptimizationCore,
+    create_supreme_optimization_core
+)
 from .rl_pruning import RLPruning, RLPruningAgent, RLPruningOptimizations, create_rl_pruning, create_rl_pruning_agent
 from .optimization_registry import OptimizationRegistry, apply_optimizations, get_optimization_config, register_optimization, get_optimization_report
 from .advanced_optimization_registry_v2 import AdvancedOptimizationConfig, get_advanced_optimization_config, apply_advanced_optimizations, get_advanced_optimization_report
@@ -113,7 +173,85 @@ __all__ = [
     'create_computational_optimizer',
     'OptimizationProfile',
     'get_optimization_profiles',
-    'apply_optimization_profile'
+    'apply_optimization_profile',
+    'FusedLayerNormLinear',
+    'FusedAttentionMLP',
+    'KernelFusionOptimizer',
+    'create_kernel_fusion_optimizer',
+    'QuantizedLinear',
+    'QuantizedLayerNorm',
+    'AdvancedQuantizationOptimizer',
+    'create_quantization_optimizer',
+    'TensorPool',
+    'ActivationCache',
+    'MemoryPoolingOptimizer',
+    'create_memory_pooling_optimizer',
+    'get_global_tensor_pool',
+    'get_global_activation_cache',
+    'AdvancedCUDAConfig',
+    'FusedKernelOptimizer',
+    'MemoryCoalescingOptimizer',
+    'QuantizationKernelOptimizer',
+    'EnhancedCUDAOptimizations',
+    'create_enhanced_cuda_optimizer',
+    'UltraOptimizedLayerNorm',
+    'AdaptiveQuantization',
+    'DynamicKernelFusion',
+    'IntelligentMemoryManager',
+    'UltraOptimizationCore',
+    'create_ultra_optimization_core',
+    'SuperOptimizedAttention',
+    'AdaptiveComputationTime',
+    'SuperOptimizedMLP',
+    'ProgressiveOptimization',
+    'SuperOptimizationCore',
+    'create_super_optimization_core',
+    'SelfOptimizingLayerNorm',
+    'AdaptiveOptimizationScheduler',
+    'DynamicComputationGraph',
+    'MetaOptimizationCore',
+    'create_meta_optimization_core',
+    'HyperOptimizedLinear',
+    'NeuralArchitectureOptimizer',
+    'AdvancedGradientOptimizer',
+    'HyperOptimizationCore',
+    'create_hyper_optimization_core',
+    'QuantumInspiredLinear',
+    'QuantumAttention',
+    'QuantumLayerNorm',
+    'QuantumOptimizationCore',
+    'create_quantum_optimization_core',
+    'ArchitectureGene',
+    'ArchitectureChromosome',
+    'NeuralArchitectureSearchOptimizer',
+    'NASOptimizationCore',
+    'create_nas_optimization_core',
+    'AdaptivePrecisionOptimizer',
+    'DynamicKernelFusionOptimizer',
+    'IntelligentMemoryManager',
+    'SelfOptimizingComponent',
+    'EnhancedOptimizedLayerNorm',
+    'EnhancedOptimizationCore',
+    'create_enhanced_optimization_core',
+    'NeuralCodeOptimizer',
+    'AdaptiveAlgorithmSelector',
+    'PredictiveOptimizer',
+    'SelfEvolvingKernel',
+    'RealTimeProfiler',
+    'UltraEnhancedOptimizationCore',
+    'create_ultra_enhanced_optimization_core',
+    'AIOptimizationAgent',
+    'QuantumNeuralFusion',
+    'EvolutionaryOptimizer',
+    'HardwareAwareOptimizer',
+    'MegaEnhancedOptimizationCore',
+    'create_mega_enhanced_optimization_core',
+    'NeuralArchitectureOptimizer',
+    'DynamicComputationGraph',
+    'SelfModifyingOptimizer',
+    'QuantumComputingSimulator',
+    'SupremeOptimizationCore',
+    'create_supreme_optimization_core'
 ]
 
-__version__ = "3.2.0"
+__version__ = "9.0.0"
