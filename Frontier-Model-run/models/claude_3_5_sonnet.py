@@ -264,9 +264,9 @@ class MixtureOfDepths(nn.Module):
     def __init__(self, dim: int, num_experts: int = 4):
         super().__init__()
         self.num_experts = num_experts
-        self.gate = nn.Linear(dim, num_experts)
+        self.gate = ClaudeLinear(dim, num_experts, bias=False)
         self.depth_predictors = nn.ModuleList([
-            nn.Linear(dim, 1) for _ in range(num_experts)
+            ClaudeLinear(dim, 1, bias=False) for _ in range(num_experts)
         ])
     
     def forward(self, x):
@@ -356,9 +356,9 @@ class ClaudeTransformer(nn.Module):
                                   apply_safety_filter=params.use_constitutional_ai)
 
         if self.use_constitutional_ai:
-            self.safety_classifier = nn.Linear(params.dim, 1)
-            self.harmlessness_head = nn.Linear(params.dim, params.vocab_size)
-            self.helpfulness_head = nn.Linear(params.dim, params.vocab_size)
+            self.safety_classifier = ClaudeLinear(params.dim, 1, bias=False, apply_safety_filter=True)
+            self.harmlessness_head = ClaudeLinear(params.dim, params.vocab_size, bias=False, apply_safety_filter=True)
+            self.helpfulness_head = ClaudeLinear(params.dim, params.vocab_size, bias=False, apply_safety_filter=True)
 
         self.freqs_cis = precompute_freqs_cis_claude(
             params.dim // params.n_heads,
@@ -420,7 +420,7 @@ class ClaudeTransformer(nn.Module):
         return final_output
 
 def create_claude_3_5_sonnet_model(config: Optional[Dict[str, Any]] = None) -> ClaudeTransformer:
-    """Factory function to create Claude-3.5-Sonnet model with constitutional AI."""
+    """Factory function to create Claude-3.5-Sonnet model with constitutional AI and optimization_core integration."""
     
     default_config = {
         'dim': 8192,

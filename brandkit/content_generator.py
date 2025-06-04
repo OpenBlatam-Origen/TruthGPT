@@ -38,24 +38,46 @@ class BrandConditioningLayer(nn.Module):
         super().__init__()
         self.args = args
         
-        self.brand_projector = nn.Sequential(
-            nn.Linear(args.brand_profile_dim, args.hidden_size),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size, args.style_conditioning_dim),
-            nn.LayerNorm(args.style_conditioning_dim)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.brand_projector = nn.Sequential(
+                OptimizedLinear(args.brand_profile_dim, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size, args.style_conditioning_dim)
+            )
+        except ImportError:
+            self.brand_projector = nn.Sequential(
+                nn.Linear(args.brand_profile_dim, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size, args.style_conditioning_dim)
+            )
+        
+        try:
+            from optimization_core import OptimizedLayerNorm
+            self.brand_norm = OptimizedLayerNorm(args.style_conditioning_dim)
+        except ImportError:
+            self.brand_norm = nn.LayerNorm(args.style_conditioning_dim)
         
         self.content_type_embedding = nn.Embedding(
             len(args.content_types) if args.content_types is not None else 5, 
             args.style_conditioning_dim
         )
         
-        self.conditioning_fusion = nn.Sequential(
-            nn.Linear(args.style_conditioning_dim * 2, args.hidden_size),
-            nn.ReLU(),
-            nn.Linear(args.hidden_size, args.hidden_size)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.conditioning_fusion = nn.Sequential(
+                OptimizedLinear(args.style_conditioning_dim * 2, args.hidden_size),
+                nn.ReLU(),
+                OptimizedLinear(args.hidden_size, args.hidden_size)
+            )
+        except ImportError:
+            self.conditioning_fusion = nn.Sequential(
+                nn.Linear(args.style_conditioning_dim * 2, args.hidden_size),
+                nn.ReLU(),
+                nn.Linear(args.hidden_size, args.hidden_size)
+            )
         
     def forward(self, brand_profile, content_type_ids):
         """
@@ -66,6 +88,7 @@ class BrandConditioningLayer(nn.Module):
             content_type_ids: (batch_size,) - Content type indices
         """
         brand_conditioning = self.brand_projector(brand_profile)
+        brand_conditioning = self.brand_norm(brand_conditioning)
         
         content_type_emb = self.content_type_embedding(content_type_ids)
         
@@ -96,7 +119,11 @@ class TextGenerator(nn.Module):
             ) for _ in range(args.num_layers)
         ])
         
-        self.output_projection = nn.Linear(args.hidden_size, args.text_vocab_size)
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.output_projection = OptimizedLinear(args.hidden_size, args.text_vocab_size)
+        except ImportError:
+            self.output_projection = nn.Linear(args.hidden_size, args.text_vocab_size)
         
     def forward(self, input_ids, conditioning_vector, attention_mask=None):
         """
@@ -130,26 +157,53 @@ class ImageLayoutGenerator(nn.Module):
         super().__init__()
         self.args = args
         
-        self.layout_generator = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size, args.layout_dim),
-            nn.ReLU(),
-            nn.Linear(args.layout_dim, args.image_feature_dim)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.layout_generator = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size, args.layout_dim),
+                nn.ReLU(),
+                OptimizedLinear(args.layout_dim, args.image_feature_dim)
+            )
+        except ImportError:
+            self.layout_generator = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size, args.layout_dim),
+                nn.ReLU(),
+                nn.Linear(args.layout_dim, args.image_feature_dim)
+            )
         
-        self.color_generator = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Linear(args.hidden_size // 2, 15)  # 5 colors × 3 RGB values
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.color_generator = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                OptimizedLinear(args.hidden_size // 2, 15)  # 5 colors × 3 RGB values
+            )
+        except ImportError:
+            self.color_generator = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Linear(args.hidden_size // 2, 15)  # 5 colors × 3 RGB values
+            )
         
-        self.typography_generator = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Linear(args.hidden_size // 2, 64)  # Typography parameters
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.typography_generator = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                OptimizedLinear(args.hidden_size // 2, 64)  # Typography parameters
+            )
+        except ImportError:
+            self.typography_generator = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Linear(args.hidden_size // 2, 64)  # Typography parameters
+            )
         
     def forward(self, conditioning_vector):
         """
@@ -183,13 +237,23 @@ class ContentGenerator(nn.Module):
         self.text_generator = TextGenerator(args)
         self.image_generator = ImageLayoutGenerator(args)
         
-        self.quality_scorer = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size // 2, 1),
-            nn.Sigmoid()
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.quality_scorer = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size // 2, 1),
+                nn.Sigmoid()
+            )
+        except ImportError:
+            self.quality_scorer = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size // 2, 1),
+                nn.Sigmoid()
+            )
         
     def forward(self, brand_profile, content_type_ids, input_ids=None, generate_images=True):
         """
@@ -278,4 +342,18 @@ def create_content_generator_model(config: Dict[str, Any]) -> ContentGenerator:
         content_types=config.get('content_types', None)
     )
     
-    return ContentGenerator(args)
+    model = ContentGenerator(args)
+    
+    try:
+        from enhanced_model_optimizer import create_universal_optimizer
+        optimizer = create_universal_optimizer({
+            'enable_fp16': True,
+            'enable_gradient_checkpointing': True,
+            'use_advanced_normalization': True,
+            'use_enhanced_mlp': True
+        })
+        model = optimizer.optimize_model(model, "Content-Generator")
+    except ImportError:
+        pass
+    
+    return model

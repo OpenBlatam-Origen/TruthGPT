@@ -338,13 +338,23 @@ class TruthGPTDemo:
                 OptimizedLinear(512, 100)
             )
         except ImportError:
-            return torch.nn.Sequential(
-                torch.nn.Linear(512, 1024),
-                torch.nn.ReLU(),
-                torch.nn.Linear(1024, 512),
-                torch.nn.ReLU(),
-                torch.nn.Linear(512, 100)
-            )
+            try:
+                from optimization_core.enhanced_mlp import EnhancedLinear
+                return torch.nn.Sequential(
+                    EnhancedLinear(512, 1024),
+                    torch.nn.ReLU(),
+                    EnhancedLinear(1024, 512),
+                    torch.nn.ReLU(),
+                    EnhancedLinear(512, 100)
+                )
+            except ImportError:
+                return torch.nn.Sequential(
+                    torch.nn.Linear(512, 1024),
+                    torch.nn.ReLU(),
+                    torch.nn.Linear(1024, 512),
+                    torch.nn.ReLU(),
+                    torch.nn.Linear(512, 100)
+                )
     
     def get_model_info(self, model_name: str) -> Dict[str, Any]:
         """Get comprehensive model information."""

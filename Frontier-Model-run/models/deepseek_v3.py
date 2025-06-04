@@ -415,7 +415,7 @@ class Transformer(nn.Module):
         return output
 
 def create_deepseek_v3_model(config: Dict[str, Any]) -> Transformer:
-    """Create a DeepSeek-V3 model from configuration."""
+    """Create a DeepSeek-V3 model from configuration with optimization_core integration."""
     model_args = ModelArgs(
         dim=config.get('hidden_size', 4096),
         n_layers=config.get('num_hidden_layers', 30),

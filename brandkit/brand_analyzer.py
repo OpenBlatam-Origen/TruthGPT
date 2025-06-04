@@ -37,36 +37,75 @@ class VisualAnalyzer(nn.Module):
         super().__init__()
         self.args = args
         
-        self.color_encoder = nn.Sequential(
-            nn.Linear(3, 64),  # RGB input
-            nn.ReLU(),
-            nn.Linear(64, 128),
-            nn.ReLU(),
-            nn.Linear(128, args.color_palette_size)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.color_encoder = nn.Sequential(
+                OptimizedLinear(3, 64),  # RGB input
+                nn.ReLU(),
+                OptimizedLinear(64, 128),
+                nn.ReLU(),
+                OptimizedLinear(128, args.color_palette_size)
+            )
+        except ImportError:
+            self.color_encoder = nn.Sequential(
+                nn.Linear(3, 64),  # RGB input
+                nn.ReLU(),
+                nn.Linear(64, 128),
+                nn.ReLU(),
+                nn.Linear(128, args.color_palette_size)
+            )
         
-        self.typography_encoder = nn.Sequential(
-            nn.Linear(args.typography_features, 256),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(256, 512),
-            nn.ReLU(),
-            nn.Linear(512, args.hidden_size // 2)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.typography_encoder = nn.Sequential(
+                OptimizedLinear(args.typography_features, 256),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(256, 512),
+                nn.ReLU(),
+                OptimizedLinear(512, args.hidden_size // 2)
+            )
+        except ImportError:
+            self.typography_encoder = nn.Sequential(
+                nn.Linear(args.typography_features, 256),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(256, 512),
+                nn.ReLU(),
+                nn.Linear(512, args.hidden_size // 2)
+            )
         
-        self.layout_encoder = nn.Sequential(
-            nn.Linear(args.layout_features, 256),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(256, 512),
-            nn.ReLU(),
-            nn.Linear(512, args.hidden_size // 2)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.layout_encoder = nn.Sequential(
+                OptimizedLinear(args.layout_features, 256),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(256, 512),
+                nn.ReLU(),
+                OptimizedLinear(512, args.hidden_size // 2)
+            )
+        except ImportError:
+            self.layout_encoder = nn.Sequential(
+                nn.Linear(args.layout_features, 256),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(256, 512),
+                nn.ReLU(),
+                nn.Linear(512, args.hidden_size // 2)
+            )
         
-        self.visual_fusion = nn.Linear(
-            args.color_palette_size + args.hidden_size, 
-            args.visual_feature_dim
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.visual_fusion = OptimizedLinear(
+                args.color_palette_size + args.hidden_size, 
+                args.visual_feature_dim
+            )
+        except ImportError:
+            self.visual_fusion = nn.Linear(
+                args.color_palette_size + args.hidden_size, 
+                args.visual_feature_dim
+            )
         
     def forward(self, colors, typography_features, layout_features):
         """
@@ -105,30 +144,63 @@ class TextAnalyzer(nn.Module):
         super().__init__()
         self.args = args
         
-        self.text_encoder = nn.Sequential(
-            nn.Linear(args.text_feature_dim, args.hidden_size),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LayerNorm(args.hidden_size)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.text_encoder = nn.Sequential(
+                OptimizedLinear(args.text_feature_dim, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size, args.hidden_size)
+            )
+        except ImportError:
+            self.text_encoder = nn.Sequential(
+                nn.Linear(args.text_feature_dim, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size, args.hidden_size)
+            )
         
-        self.tone_classifier = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size // 2, args.tone_categories)
-        )
+        try:
+            from optimization_core import OptimizedLayerNorm
+            self.text_norm = OptimizedLayerNorm(args.hidden_size)
+        except ImportError:
+            self.text_norm = nn.LayerNorm(args.hidden_size)
         
-        self.sentiment_encoder = nn.Sequential(
-            nn.Linear(args.hidden_size, args.sentiment_dim),
-            nn.Tanh()
-        )
-        
-        self.style_encoder = nn.Sequential(
-            nn.Linear(args.hidden_size, args.style_dim),
-            nn.ReLU()
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.tone_classifier = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size // 2, args.tone_categories)
+            )
+            
+            self.sentiment_encoder = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.sentiment_dim),
+                nn.Tanh()
+            )
+            
+            self.style_encoder = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.style_dim),
+                nn.ReLU()
+            )
+        except ImportError:
+            self.tone_classifier = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size // 2, args.tone_categories)
+            )
+            
+            self.sentiment_encoder = nn.Sequential(
+                nn.Linear(args.hidden_size, args.sentiment_dim),
+                nn.Tanh()
+            )
+            
+            self.style_encoder = nn.Sequential(
+                nn.Linear(args.hidden_size, args.style_dim),
+                nn.ReLU()
+            )
         
     def forward(self, text_features):
         """
@@ -138,6 +210,7 @@ class TextAnalyzer(nn.Module):
             text_features: (batch_size, seq_len, text_feature_dim) - Text embeddings
         """
         encoded_text = self.text_encoder(text_features)
+        encoded_text = self.text_norm(encoded_text)
         
         pooled_text = encoded_text.mean(dim=1)  # (batch_size, hidden_size)
         
@@ -166,15 +239,31 @@ class BrandFusionLayer(nn.Module):
             batch_first=True
         )
         
-        self.visual_proj = nn.Linear(args.visual_feature_dim, args.hidden_size)
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.visual_proj = OptimizedLinear(args.visual_feature_dim, args.hidden_size)
+            
+            self.fusion_layer = nn.Sequential(
+                OptimizedLinear(args.hidden_size + args.hidden_size, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size, args.hidden_size)
+            )
+        except ImportError:
+            self.visual_proj = nn.Linear(args.visual_feature_dim, args.hidden_size)
+            
+            self.fusion_layer = nn.Sequential(
+                nn.Linear(args.hidden_size + args.hidden_size, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size, args.hidden_size)
+            )
         
-        self.fusion_layer = nn.Sequential(
-            nn.Linear(args.hidden_size + args.hidden_size, args.hidden_size),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LayerNorm(args.hidden_size)
-        )
+        try:
+            from optimization_core import OptimizedLayerNorm
+            self.fusion_norm = OptimizedLayerNorm(args.hidden_size)
+        except ImportError:
+            self.fusion_norm = nn.LayerNorm(args.hidden_size)
         
     def forward(self, visual_features, text_features):
         """
@@ -198,6 +287,7 @@ class BrandFusionLayer(nn.Module):
         ], dim=-1)
         
         fused_features = self.fusion_layer(combined)
+        fused_features = self.fusion_norm(fused_features)
         
         return fused_features
 
@@ -212,21 +302,39 @@ class BrandAnalyzer(nn.Module):
         self.text_analyzer = TextAnalyzer(args)
         self.brand_fusion = BrandFusionLayer(args)
         
-        self.brand_profile_head = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Linear(args.hidden_size // 2, args.hidden_size)
-        )
-        
-        self.consistency_head = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Linear(args.hidden_size // 2, 1),
-            nn.Sigmoid()
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.brand_profile_head = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                OptimizedLinear(args.hidden_size // 2, args.hidden_size)
+            )
+            
+            self.consistency_head = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                OptimizedLinear(args.hidden_size // 2, 1),
+                nn.Sigmoid()
+            )
+        except ImportError:
+            self.brand_profile_head = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Linear(args.hidden_size // 2, args.hidden_size)
+            )
+            
+            self.consistency_head = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Linear(args.hidden_size // 2, 1),
+                nn.Sigmoid()
+            )
         
     def forward(self, colors, typography_features, layout_features, text_features):
         """
@@ -319,4 +427,19 @@ def create_brand_analyzer_model(config: Dict[str, Any]) -> BrandAnalyzer:
         metadata_feature_dim=config.get('metadata_feature_dim', 256)
     )
     
-    return BrandAnalyzer(args)
+    model = BrandAnalyzer(args)
+    
+    try:
+        from enhanced_model_optimizer import create_universal_optimizer
+        optimizer = create_universal_optimizer({
+            'enable_fp16': True,
+            'enable_gradient_checkpointing': True,
+            'use_advanced_normalization': True,
+            'use_enhanced_mlp': True,
+            'use_mcts_optimization': True
+        })
+        model = optimizer.optimize_model(model, "Brand-Analyzer")
+    except ImportError:
+        pass
+    
+    return model

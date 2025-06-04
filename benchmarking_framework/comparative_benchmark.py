@@ -355,29 +355,85 @@ class ComparativeBenchmark:
                         'n_shared_experts': 2, 'n_activated_experts': 2
                     }
                     model = create_deepseek_v3_model(config)
+                    try:
+                        from enhanced_model_optimizer import create_universal_optimizer
+                        optimizer = create_universal_optimizer({'enable_fp16': True, 'use_advanced_normalization': True})
+                        model = optimizer.optimize_model(model, "DeepSeek-V3")
+                    except ImportError:
+                        pass
                 except ImportError:
-                    model = torch.nn.Linear(512, 1000)
+                    try:
+                        from optimization_core.enhanced_mlp import EnhancedLinear
+                        model = EnhancedLinear(512, 1000)
+                    except ImportError:
+                        try:
+                            from optimization_core.enhanced_mlp import OptimizedLinear
+                            model = OptimizedLinear(512, 1000)
+                        except ImportError:
+                            model = torch.nn.Linear(512, 1000)
             elif "Viral" in model_info.name:
                 try:
                     from variant.viral_clipper import create_viral_clipper_model
                     config = {'hidden_size': 512, 'num_layers': 6, 'num_heads': 8}
                     model = create_viral_clipper_model(config)
+                    try:
+                        from enhanced_model_optimizer import create_universal_optimizer
+                        optimizer = create_universal_optimizer({'enable_fp16': True, 'use_advanced_normalization': True})
+                        model = optimizer.optimize_model(model, "Viral-Clipper")
+                    except ImportError:
+                        pass
                 except ImportError:
-                    model = torch.nn.Linear(512, 1000)
+                    try:
+                        from optimization_core.enhanced_mlp import EnhancedLinear
+                        model = EnhancedLinear(512, 1000)
+                    except ImportError:
+                        try:
+                            from optimization_core.enhanced_mlp import OptimizedLinear
+                            model = OptimizedLinear(512, 1000)
+                        except ImportError:
+                            model = torch.nn.Linear(512, 1000)
             elif "Brand" in model_info.name:
                 try:
                     from brandkit.brand_analyzer import create_brand_analyzer_model
                     config = {'visual_dim': 2048, 'text_dim': 768, 'hidden_dim': 512, 'num_layers': 6}
                     model = create_brand_analyzer_model(config)
+                    try:
+                        from enhanced_model_optimizer import create_universal_optimizer
+                        optimizer = create_universal_optimizer({'enable_fp16': True, 'use_advanced_normalization': True})
+                        model = optimizer.optimize_model(model, "Brand-Analyzer")
+                    except ImportError:
+                        pass
                 except ImportError:
-                    model = torch.nn.Linear(512, 1000)
+                    try:
+                        from optimization_core.enhanced_mlp import EnhancedLinear
+                        model = EnhancedLinear(512, 1000)
+                    except ImportError:
+                        try:
+                            from optimization_core.enhanced_mlp import OptimizedLinear
+                            model = OptimizedLinear(512, 1000)
+                        except ImportError:
+                            model = torch.nn.Linear(512, 1000)
             elif "Qwen" in model_info.name:
                 try:
                     from qwen_variant.qwen_model import create_qwen_model
                     config = {'vocab_size': 151936, 'hidden_size': 4096, 'intermediate_size': 22016, 'num_hidden_layers': 32}
                     model = create_qwen_model(config)
+                    try:
+                        from enhanced_model_optimizer import create_universal_optimizer
+                        optimizer = create_universal_optimizer({'enable_fp16': True, 'use_advanced_normalization': True})
+                        model = optimizer.optimize_model(model, "Qwen-Model")
+                    except ImportError:
+                        pass
                 except ImportError:
-                    model = torch.nn.Linear(4096, 151936)
+                    try:
+                        from optimization_core.enhanced_mlp import EnhancedLinear
+                        model = EnhancedLinear(4096, 151936)
+                    except ImportError:
+                        try:
+                            from optimization_core.enhanced_mlp import OptimizedLinear
+                            model = OptimizedLinear(4096, 151936)
+                        except ImportError:
+                            model = torch.nn.Linear(4096, 151936)
             else:
                 raise ValueError(f"Unknown TruthGPT model: {model_info.name}")
             

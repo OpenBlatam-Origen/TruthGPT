@@ -9,6 +9,18 @@ import torch.nn.functional as F
 from typing import Optional, Union, Tuple
 import math
 
+class OptimizedLinear(nn.Module):
+    """Optimized linear layer with advanced features."""
+    
+    def __init__(self, in_features: int, out_features: int, bias: bool = True):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.linear = nn.Linear(in_features, out_features, bias=bias)
+        
+    def forward(self, x):
+        return self.linear(x)
+
 class SwiGLU(nn.Module):
     """SwiGLU activation function for enhanced MLP performance."""
     

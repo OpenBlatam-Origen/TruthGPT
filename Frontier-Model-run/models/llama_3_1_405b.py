@@ -322,6 +322,20 @@ def create_llama_3_1_405b_model(config: Optional[Dict[str, Any]] = None) -> Llam
     args = LlamaArgs(**default_config)
     model = LlamaTransformer(args)
     
+    try:
+        from enhanced_model_optimizer import create_universal_optimizer
+        optimizer = create_universal_optimizer({
+            'enable_fp16': True,
+            'enable_gradient_checkpointing': True,
+            'use_advanced_normalization': True,
+            'use_enhanced_mlp': True,
+            'use_mcts_optimization': True
+        })
+        model = optimizer.optimize_model(model, "Llama-3.1-405B")
+        print(f"✅ Applied optimization_core to Llama-3.1-405B model")
+    except ImportError:
+        pass
+    
     print(f"✅ Created Llama-3.1-405B model with {sum(p.numel() for p in model.parameters()):,} parameters")
     print(f"🔧 Optimizations: Flash Attention={args.use_flash_attention}, "
           f"Gradient Checkpointing={args.use_gradient_checkpointing}, "

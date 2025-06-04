@@ -39,10 +39,17 @@ class MultiModalEncoder(nn.Module):
         super().__init__()
         self.args = args
         
-        self.visual_proj = nn.Linear(args.visual_feature_dim, args.hidden_size)
-        self.audio_proj = nn.Linear(args.audio_feature_dim, args.hidden_size)
-        self.text_proj = nn.Linear(args.text_feature_dim, args.hidden_size)
-        self.engagement_proj = nn.Linear(args.engagement_feature_dim, args.hidden_size)
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.visual_proj = OptimizedLinear(args.visual_feature_dim, args.hidden_size)
+            self.audio_proj = OptimizedLinear(args.audio_feature_dim, args.hidden_size)
+            self.text_proj = OptimizedLinear(args.text_feature_dim, args.hidden_size)
+            self.engagement_proj = OptimizedLinear(args.engagement_feature_dim, args.hidden_size)
+        except ImportError:
+            self.visual_proj = nn.Linear(args.visual_feature_dim, args.hidden_size)
+            self.audio_proj = nn.Linear(args.audio_feature_dim, args.hidden_size)
+            self.text_proj = nn.Linear(args.text_feature_dim, args.hidden_size)
+            self.engagement_proj = nn.Linear(args.engagement_feature_dim, args.hidden_size)
         
         self.pos_encoding = nn.Parameter(
             torch.randn(args.max_sequence_length, args.hidden_size)
@@ -92,10 +99,17 @@ class ViralityAttention(nn.Module):
         self.num_heads = args.num_attention_heads
         self.head_dim = args.hidden_size // args.num_attention_heads
         
-        self.q_proj = nn.Linear(args.hidden_size, args.hidden_size)
-        self.k_proj = nn.Linear(args.hidden_size, args.hidden_size)
-        self.v_proj = nn.Linear(args.hidden_size, args.hidden_size)
-        self.out_proj = nn.Linear(args.hidden_size, args.hidden_size)
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.q_proj = OptimizedLinear(args.hidden_size, args.hidden_size)
+            self.k_proj = OptimizedLinear(args.hidden_size, args.hidden_size)
+            self.v_proj = OptimizedLinear(args.hidden_size, args.hidden_size)
+            self.out_proj = OptimizedLinear(args.hidden_size, args.hidden_size)
+        except ImportError:
+            self.q_proj = nn.Linear(args.hidden_size, args.hidden_size)
+            self.k_proj = nn.Linear(args.hidden_size, args.hidden_size)
+            self.v_proj = nn.Linear(args.hidden_size, args.hidden_size)
+            self.out_proj = nn.Linear(args.hidden_size, args.hidden_size)
         
         self.dropout = nn.Dropout(args.dropout)
         
@@ -128,13 +142,23 @@ class ViralDetectorLayer(nn.Module):
     def __init__(self, args: ViralClipperArgs):
         super().__init__()
         self.attention = ViralityAttention(args)
-        self.feed_forward = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size * 4),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size * 4, args.hidden_size),
-            nn.Dropout(args.dropout)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.feed_forward = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size * 4),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size * 4, args.hidden_size),
+                nn.Dropout(args.dropout)
+            )
+        except ImportError:
+            self.feed_forward = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size * 4),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size * 4, args.hidden_size),
+                nn.Dropout(args.dropout)
+            )
         try:
             from optimization_core import OptimizedLayerNorm
             self.layer_norm1 = OptimizedLayerNorm(args.hidden_size)
@@ -165,20 +189,37 @@ class ViralVideoClipper(nn.Module):
             ViralDetectorLayer(args) for _ in range(args.num_layers)
         ])
         
-        self.virality_head = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size // 2, 1),
-            nn.Sigmoid()
-        )
-        
-        self.segment_head = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size // 2),
-            nn.ReLU(),
-            nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size // 2, 2)  # Start and end probabilities
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            self.virality_head = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size // 2, 1),
+                nn.Sigmoid()
+            )
+            
+            self.segment_head = nn.Sequential(
+                OptimizedLinear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                OptimizedLinear(args.hidden_size // 2, 2)  # Start and end probabilities
+            )
+        except ImportError:
+            self.virality_head = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size // 2, 1),
+                nn.Sigmoid()
+            )
+            
+            self.segment_head = nn.Sequential(
+                nn.Linear(args.hidden_size, args.hidden_size // 2),
+                nn.ReLU(),
+                nn.Dropout(args.dropout),
+                nn.Linear(args.hidden_size // 2, 2)  # Start and end probabilities
+            )
         
         try:
             from optimization_core import OptimizedLayerNorm
@@ -290,4 +331,19 @@ def create_viral_clipper_model(config: Dict[str, Any]) -> ViralVideoClipper:
         engagement_feature_dim=config.get('engagement_feature_dim', 64)
     )
     
-    return ViralVideoClipper(args)
+    model = ViralVideoClipper(args)
+    
+    try:
+        from enhanced_model_optimizer import create_universal_optimizer
+        optimizer = create_universal_optimizer({
+            'enable_fp16': True,
+            'enable_gradient_checkpointing': True,
+            'use_advanced_normalization': True,
+            'use_enhanced_mlp': True,
+            'use_mcts_optimization': True
+        })
+        model = optimizer.optimize_model(model, "viral_clipper")
+    except ImportError:
+        pass
+    
+    return model
