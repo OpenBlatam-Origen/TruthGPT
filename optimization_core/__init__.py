@@ -20,6 +20,9 @@ from .optimization_registry import OptimizationRegistry, apply_optimizations, ge
 from .advanced_optimization_registry_v2 import AdvancedOptimizationConfig, get_advanced_optimization_config, apply_advanced_optimizations, get_advanced_optimization_report
 from .enhanced_mcts_optimizer import EnhancedMCTSWithBenchmarks, EnhancedMCTSBenchmarkArgs, create_enhanced_mcts_with_benchmarks, benchmark_mcts_comparison
 from .olympiad_benchmarks import OlympiadBenchmarkSuite, OlympiadBenchmarkConfig, OlympiadProblem, ProblemCategory, DifficultyLevel, get_olympiad_benchmark_config, create_olympiad_benchmark_suite
+from .memory_optimizations import MemoryOptimizer, MemoryOptimizationConfig, create_memory_optimizer
+from .computational_optimizations import FusedAttention, BatchOptimizer, ComputationalOptimizer, create_computational_optimizer
+from .optimization_profiles import OptimizationProfile, get_optimization_profiles, apply_optimization_profile
 
 __all__ = [
     'OptimizedLayerNorm',
@@ -100,7 +103,17 @@ __all__ = [
     'ProblemCategory',
     'DifficultyLevel',
     'get_olympiad_benchmark_config',
-    'create_olympiad_benchmark_suite'
+    'create_olympiad_benchmark_suite',
+    'MemoryOptimizer',
+    'MemoryOptimizationConfig',
+    'create_memory_optimizer',
+    'FusedAttention',
+    'BatchOptimizer',
+    'ComputationalOptimizer',
+    'create_computational_optimizer',
+    'OptimizationProfile',
+    'get_optimization_profiles',
+    'apply_optimization_profile'
 ]
 
-__version__ = "3.0.0"
+__version__ = "3.2.0"
