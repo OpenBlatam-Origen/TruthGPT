@@ -74,24 +74,46 @@ def config_to_args(config):
         } if config['deepspeed']['use_deepspeed'] else None
     })
     
-    # DeepSeek settings
+    # DeepSeek V3 settings
+    deepseek_config = {
+        'model_type': config['deepseek']['model_type'],
+        'use_native_implementation': config['deepseek'].get('use_native_implementation', True),
+        'max_position_embeddings': config['deepseek']['max_position_embeddings'],
+        'hidden_size': config['deepseek']['hidden_size'],
+        'num_hidden_layers': config['deepseek']['num_hidden_layers'],
+        'num_attention_heads': config['deepseek']['num_attention_heads'],
+        'num_key_value_heads': config['deepseek'].get('num_key_value_heads'),
+        'vocab_size': config['deepseek'].get('vocab_size', 102400),
+        'intermediate_size': config['deepseek']['intermediate_size'],
+        'hidden_dropout_prob': config['deepseek']['hidden_dropout_prob'],
+        'attention_dropout_prob': config['deepseek']['attention_dropout_prob'],
+        'layer_norm_eps': config['deepseek']['layer_norm_eps'],
+        'rope_theta': config['deepseek'].get('rope_theta', 10000.0),
+        'q_lora_rank': config['deepseek'].get('q_lora_rank', 1536),
+        'kv_lora_rank': config['deepseek'].get('kv_lora_rank', 512),
+        'qk_rope_head_dim': config['deepseek'].get('qk_rope_head_dim', 64),
+        'v_head_dim': config['deepseek'].get('v_head_dim', 128),
+        'qk_nope_head_dim': config['deepseek'].get('qk_nope_head_dim', 128),
+        'n_routed_experts': config['deepseek'].get('n_routed_experts', 64),
+        'n_shared_experts': config['deepseek'].get('n_shared_experts', 2),
+        'n_activated_experts': config['deepseek'].get('n_activated_experts', 6),
+        'moe_intermediate_size': config['deepseek'].get('moe_intermediate_size', 1407),
+        'shared_intermediate_size': config['deepseek'].get('shared_intermediate_size', 1024),
+        'use_fp8': config['deepseek'].get('use_fp8', False),
+        'original_seq_len': config['deepseek'].get('original_seq_len', 4096),
+        'rope_factor': config['deepseek'].get('rope_factor', 40),
+        'beta_fast': config['deepseek'].get('beta_fast', 32),
+        'beta_slow': config['deepseek'].get('beta_slow', 1),
+        'mscale': config['deepseek'].get('mscale', 1.0),
+        'use_rotary_embeddings': config['deepseek']['use_rotary_embeddings'],
+        'use_alibi': config['deepseek']['use_alibi'],
+        'use_flash_attention_2': config['deepseek']['use_flash_attention_2'],
+        'use_sliding_window': config['deepseek']['use_sliding_window'],
+        'sliding_window_size': config['deepseek']['sliding_window_size']
+    }
+    
     args_dict.update({
-        'deepseek_config': {
-            'model_type': config['deepseek']['model_type'],
-            'max_position_embeddings': config['deepseek']['max_position_embeddings'],
-            'hidden_size': config['deepseek']['hidden_size'],
-            'num_hidden_layers': config['deepseek']['num_hidden_layers'],
-            'num_attention_heads': config['deepseek']['num_attention_heads'],
-            'intermediate_size': config['deepseek']['intermediate_size'],
-            'hidden_dropout_prob': config['deepseek']['hidden_dropout_prob'],
-            'attention_dropout_prob': config['deepseek']['attention_dropout_prob'],
-            'layer_norm_eps': config['deepseek']['layer_norm_eps'],
-            'use_rotary_embeddings': config['deepseek']['use_rotary_embeddings'],
-            'use_alibi': config['deepseek']['use_alibi'],
-            'use_flash_attention_2': config['deepseek']['use_flash_attention_2'],
-            'use_sliding_window': config['deepseek']['use_sliding_window'],
-            'sliding_window_size': config['deepseek']['sliding_window_size']
-        }
+        'deepseek_config': deepseek_config
     })
     
     # Parallel processing settings
@@ -141,4 +163,4 @@ def main_with_config():
     main(script_args)
 
 if __name__ == "__main__":
-    main_with_config() 
+    main_with_config()  

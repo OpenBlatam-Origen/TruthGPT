@@ -45,6 +45,11 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer
 )
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from models.deepseek_v3 import create_deepseek_v3_model
 from datasets import Dataset, DatasetDict, IterableDataset, load_dataset
 from trl import GRPOTrainer, ModelConfig, ScriptArguments, TrlParser, get_peft_config
 from accelerate import Accelerator
@@ -79,7 +84,6 @@ logging.basicConfig(
     ]
 )
 
-@dataclass
 class PrecisionMode(Enum):
     """Precision modes for layer normalization."""
     FP32 = auto()
@@ -105,17 +109,48 @@ class LayerNormConfig:
 
 @dataclass
 class DeepSeekConfig:
-    """Configuration specific to DeepSeek R1 model."""
+    """Configuration specific to DeepSeek V3 model."""
     model_type: str = "deepseek"
-    model_name: str = "deepseek-ai/deepseek-r1"
+    model_name: str = "deepseek-ai/deepseek-v3"
+    use_native_implementation: bool = True
+    
+    # Basic model parameters
     max_position_embeddings: int = 8192
     hidden_size: int = 4096
-    num_hidden_layers: int = 32
+    num_hidden_layers: int = 30
     num_attention_heads: int = 32
+    num_key_value_heads: Optional[int] = None
+    vocab_size: int = 102400
     intermediate_size: int = 11008
     hidden_dropout_prob: float = 0.1
     attention_dropout_prob: float = 0.1
     layer_norm_eps: float = 1e-5
+    rope_theta: float = 10000.0
+    
+    # MLA (Multi-Head Latent Attention) parameters
+    q_lora_rank: int = 1536
+    kv_lora_rank: int = 512
+    qk_rope_head_dim: int = 64
+    v_head_dim: int = 128
+    qk_nope_head_dim: int = 128
+    
+    # MoE (Mixture of Experts) parameters
+    n_routed_experts: int = 64
+    n_shared_experts: int = 2
+    n_activated_experts: int = 6
+    moe_intermediate_size: int = 1407
+    shared_intermediate_size: int = 1024
+    
+    # Quantization parameters
+    use_fp8: bool = False
+    
+    # YARN (Yet Another RoPE extensioN) parameters
+    original_seq_len: int = 4096
+    rope_factor: float = 40
+    beta_fast: int = 32
+    beta_slow: int = 1
+    mscale: float = 1.0
+    
     use_rotary_embeddings: bool = True
     use_alibi: bool = False
     use_flash_attention_2: bool = True
@@ -399,14 +434,34 @@ def setup_training_config(args: KFGRPOScriptArguments) -> Dict[str, Any]:
         'deepseek': {
             'model_type': args.deepseek_config.model_type,
             'model_name': args.deepseek_config.model_name,
+            'use_native_implementation': args.deepseek_config.use_native_implementation,
             'max_position_embeddings': args.deepseek_config.max_position_embeddings,
             'hidden_size': args.deepseek_config.hidden_size,
             'num_hidden_layers': args.deepseek_config.num_hidden_layers,
             'num_attention_heads': args.deepseek_config.num_attention_heads,
+            'num_key_value_heads': args.deepseek_config.num_key_value_heads,
+            'vocab_size': args.deepseek_config.vocab_size,
             'intermediate_size': args.deepseek_config.intermediate_size,
             'hidden_dropout_prob': args.deepseek_config.hidden_dropout_prob,
             'attention_dropout_prob': args.deepseek_config.attention_dropout_prob,
             'layer_norm_eps': args.deepseek_config.layer_norm_eps,
+            'rope_theta': args.deepseek_config.rope_theta,
+            'q_lora_rank': args.deepseek_config.q_lora_rank,
+            'kv_lora_rank': args.deepseek_config.kv_lora_rank,
+            'qk_rope_head_dim': args.deepseek_config.qk_rope_head_dim,
+            'v_head_dim': args.deepseek_config.v_head_dim,
+            'qk_nope_head_dim': args.deepseek_config.qk_nope_head_dim,
+            'n_routed_experts': args.deepseek_config.n_routed_experts,
+            'n_shared_experts': args.deepseek_config.n_shared_experts,
+            'n_activated_experts': args.deepseek_config.n_activated_experts,
+            'moe_intermediate_size': args.deepseek_config.moe_intermediate_size,
+            'shared_intermediate_size': args.deepseek_config.shared_intermediate_size,
+            'use_fp8': args.deepseek_config.use_fp8,
+            'original_seq_len': args.deepseek_config.original_seq_len,
+            'rope_factor': args.deepseek_config.rope_factor,
+            'beta_fast': args.deepseek_config.beta_fast,
+            'beta_slow': args.deepseek_config.beta_slow,
+            'mscale': args.deepseek_config.mscale,
             'use_rotary_embeddings': args.deepseek_config.use_rotary_embeddings,
             'use_alibi': args.deepseek_config.use_alibi,
             'use_flash_attention_2': args.deepseek_config.use_flash_attention_2,
@@ -480,12 +535,49 @@ def main(script_args: KFGRPOScriptArguments, training_args: Any, model_args: Any
         )
         
         # Initialize model with DeepSeek optimizations
-        model = AutoModelForCausalLM.from_pretrained(
-            script_args.deepseek_config.model_name,
-            torch_dtype=torch.bfloat16 if script_args.bf16 else torch.float16 if script_args.fp16 else torch.float32,
-            device_map="auto" if script_args.use_deepspeed else None,
-            trust_remote_code=True
-        )
+        if script_args.deepseek_config.use_native_implementation:
+            model_config = {
+                'hidden_size': script_args.deepseek_config.hidden_size,
+                'num_hidden_layers': script_args.deepseek_config.num_hidden_layers,
+                'num_attention_heads': script_args.deepseek_config.num_attention_heads,
+                'num_key_value_heads': script_args.deepseek_config.num_key_value_heads,
+                'vocab_size': script_args.deepseek_config.vocab_size,
+                'layer_norm_eps': script_args.deepseek_config.layer_norm_eps,
+                'rope_theta': script_args.deepseek_config.rope_theta,
+                'max_position_embeddings': script_args.deepseek_config.max_position_embeddings,
+                'q_lora_rank': script_args.deepseek_config.q_lora_rank,
+                'kv_lora_rank': script_args.deepseek_config.kv_lora_rank,
+                'qk_rope_head_dim': script_args.deepseek_config.qk_rope_head_dim,
+                'v_head_dim': script_args.deepseek_config.v_head_dim,
+                'qk_nope_head_dim': script_args.deepseek_config.qk_nope_head_dim,
+                'n_routed_experts': script_args.deepseek_config.n_routed_experts,
+                'n_shared_experts': script_args.deepseek_config.n_shared_experts,
+                'n_activated_experts': script_args.deepseek_config.n_activated_experts,
+                'moe_intermediate_size': script_args.deepseek_config.moe_intermediate_size,
+                'shared_intermediate_size': script_args.deepseek_config.shared_intermediate_size,
+                'use_fp8': script_args.deepseek_config.use_fp8,
+                'original_seq_len': script_args.deepseek_config.original_seq_len,
+                'rope_factor': script_args.deepseek_config.rope_factor,
+                'beta_fast': script_args.deepseek_config.beta_fast,
+                'beta_slow': script_args.deepseek_config.beta_slow,
+                'mscale': script_args.deepseek_config.mscale
+            }
+            model = create_deepseek_v3_model(model_config)
+            
+            if script_args.bf16:
+                model = model.to(torch.bfloat16)
+            elif script_args.fp16:
+                model = model.to(torch.float16)
+            
+            logger.info("Using native DeepSeek-V3 implementation")
+        else:
+            model = AutoModelForCausalLM.from_pretrained(
+                script_args.deepseek_config.model_name,
+                torch_dtype=torch.bfloat16 if script_args.bf16 else torch.float16 if script_args.fp16 else torch.float32,
+                device_map="auto" if script_args.use_deepspeed else None,
+                trust_remote_code=True
+            )
+            logger.info("Using HuggingFace DeepSeek implementation")
         
         if script_args.use_deepseek_optimizations:
             setup_deepseek_optimizations(model, script_args.deepseek_config)
@@ -522,4 +614,4 @@ def main(script_args: KFGRPOScriptArguments, training_args: Any, model_args: Any
 
 if __name__ == "__main__":
     args = tyro.cli(KFGRPOScriptArguments)
-    main(args, args, args) 
+    main(args, args, args)    
