@@ -7,8 +7,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from optimization_core import apply_optimizations, get_optimization_config, CUDAOptimizations
-from optimization_core.benchmarks import benchmark_optimization_impact, create_text_input_generator, create_multimodal_input_generator
+import torch
+import torch.nn as nn
+from optimization_core import apply_optimizations, get_optimization_config, get_optimization_report
+import warnings
+import time
 
 def optimize_deepseek_v3():
     """Optimize DeepSeek-V3 model."""
