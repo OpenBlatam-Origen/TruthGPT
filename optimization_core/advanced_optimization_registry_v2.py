@@ -204,6 +204,56 @@ ADVANCED_OPTIMIZATION_CONFIGS = {
             'problems_per_category': 20,
             'time_limit_minutes': 60
         }
+    ),
+    'claude_api': AdvancedOptimizationConfig(
+        enable_advanced_normalization=True,
+        enable_positional_encodings=False,
+        enable_enhanced_mlp=True,
+        enable_rl_pruning=False,  # API models don't need pruning
+        enable_enhanced_mcts=True,
+        enable_olympiad_benchmarks=True,
+        advanced_normalization_config={
+            'use_advanced_rms_norm': True,
+            'eps': 1e-8
+        },
+        enhanced_mlp_config={
+            'use_swiglu': True,
+            'use_gated_mlp': True
+        },
+        enhanced_mcts_config={
+            'use_neural_guidance': True,
+            'entropy_weight': 0.1
+        },
+        olympiad_benchmark_config={
+            'problem_categories': ['algebra', 'number_theory'],
+            'difficulty_levels': ['amc_12', 'aime'],
+            'problems_per_category': 10
+        }
+    ),
+    'claud_api': AdvancedOptimizationConfig(  # Alternative spelling as requested
+        enable_advanced_normalization=True,
+        enable_positional_encodings=False,
+        enable_enhanced_mlp=True,
+        enable_rl_pruning=False,
+        enable_enhanced_mcts=True,
+        enable_olympiad_benchmarks=True,
+        advanced_normalization_config={
+            'use_advanced_rms_norm': True,
+            'eps': 1e-8
+        },
+        enhanced_mlp_config={
+            'use_swiglu': True,
+            'use_gated_mlp': True
+        },
+        enhanced_mcts_config={
+            'use_neural_guidance': True,
+            'entropy_weight': 0.1
+        },
+        olympiad_benchmark_config={
+            'problem_categories': ['algebra', 'number_theory'],
+            'difficulty_levels': ['amc_12', 'aime'],
+            'problems_per_category': 10
+        }
     )
 }
 

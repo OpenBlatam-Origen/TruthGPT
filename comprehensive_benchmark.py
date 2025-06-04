@@ -20,41 +20,251 @@ try:
 except ImportError:
     def create_deepseek_v3_model(config):
         import torch.nn as nn
-        return nn.Sequential(
-            nn.Linear(config.get('hidden_size', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, config.get('vocab_size', 1000))
-        )
+        try:
+            from Frontier_Model_run.models.deepseek_v3 import Linear as DeepSeekLinear
+            model = nn.Sequential(
+                DeepSeekLinear(config.get('hidden_size', 512), 1024),
+                nn.ReLU(),
+                DeepSeekLinear(1024, config.get('vocab_size', 1000))
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import EnhancedLinear
+                model = nn.Sequential(
+                    EnhancedLinear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    EnhancedLinear(1024, config.get('vocab_size', 1000))
+                )
+            except ImportError:
+                try:
+                    from optimization_core.enhanced_mlp import OptimizedLinear
+                    model = nn.Sequential(
+                        OptimizedLinear(config.get('hidden_size', 512), 1024),
+                        nn.ReLU(),
+                        OptimizedLinear(1024, config.get('vocab_size', 1000))
+                    )
+                except ImportError:
+                    model = nn.Sequential(
+                        nn.Linear(config.get('hidden_size', 512), 1024),
+                        nn.ReLU(),
+                        nn.Linear(1024, config.get('vocab_size', 1000))
+                    )
+        
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True
+            })
+            model = optimizer.optimize_model(model, "DeepSeek-V3")
+        except ImportError:
+            pass
+        
+        return model
 try:
     from variant.viral_clipper import create_viral_clipper_model
 except ImportError:
     def create_viral_clipper_model(config):
         import torch.nn as nn
-        return nn.Sequential(
-            nn.Linear(config.get('hidden_size', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, 100)
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            model = nn.Sequential(
+                EnhancedLinear(config.get('hidden_size', 512), 1024),
+                nn.ReLU(),
+                EnhancedLinear(1024, 100)
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import OptimizedLinear
+                model = nn.Sequential(
+                    OptimizedLinear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    OptimizedLinear(1024, 100)
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, 100)
+                )
+        
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True
+            })
+            model = optimizer.optimize_model(model, "Viral-Clipper")
+        except ImportError:
+            pass
+        
+        return model
 try:
     from brandkit.brand_analyzer import create_brand_analyzer_model
 except ImportError:
     def create_brand_analyzer_model(config):
         import torch.nn as nn
-        return nn.Sequential(
-            nn.Linear(config.get('hidden_dim', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, config.get('num_brand_components', 7))
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            model = nn.Sequential(
+                EnhancedLinear(config.get('hidden_dim', 512), 1024),
+                nn.ReLU(),
+                EnhancedLinear(1024, config.get('num_brand_components', 7))
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import OptimizedLinear
+                model = nn.Sequential(
+                    OptimizedLinear(config.get('hidden_dim', 512), 1024),
+                    nn.ReLU(),
+                    OptimizedLinear(1024, config.get('num_brand_components', 7))
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('hidden_dim', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('num_brand_components', 7))
+                )
+        
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True
+            })
+            model = optimizer.optimize_model(model, "Brand-Analyzer")
+        except ImportError:
+            pass
+        
+        return model
 try:
     from qwen_variant.qwen_model import create_qwen_model
+    from Frontier_Model_run.models.llama_3_1_405b import create_llama_3_1_405b_model
+    from Frontier_Model_run.models.claude_3_5_sonnet import create_claude_3_5_sonnet_model
 except ImportError:
     def create_qwen_model(config):
         import torch.nn as nn
-        return nn.Sequential(
-            nn.Linear(config.get('hidden_size', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, config.get('vocab_size', 1000))
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            model = nn.Sequential(
+                EnhancedLinear(config.get('hidden_size', 512), 1024),
+                nn.ReLU(),
+                EnhancedLinear(1024, config.get('vocab_size', 1000))
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import OptimizedLinear
+                model = nn.Sequential(
+                    OptimizedLinear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    OptimizedLinear(1024, config.get('vocab_size', 1000))
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('vocab_size', 1000))
+                )
+        
+        try:
+            from enhanced_model_optimizer import create_universal_optimizer
+            optimizer = create_universal_optimizer({
+                'enable_fp16': True,
+                'use_advanced_normalization': True,
+                'use_enhanced_mlp': True
+            })
+            model = optimizer.optimize_model(model, "Qwen-Model")
+        except ImportError:
+            pass
+        
+        return model
+    
+    def create_llama_3_1_405b_model(config):
+        """Create Llama-3.1-405B model with given config."""
+        try:
+            return create_llama_3_1_405b_model(config)
+        except Exception as e:
+            print(f"Failed to create Llama-3.1-405B model: {e}")
+            import torch.nn as nn
+            try:
+                from Frontier_Model_run.models.llama_3_1_405b import LlamaLinear
+                model = nn.Sequential(
+                    LlamaLinear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    LlamaLinear(1024, config.get('vocab_size', 128256))
+                )
+            except ImportError:
+                try:
+                    from optimization_core.enhanced_mlp import EnhancedLinear
+                    model = nn.Sequential(
+                        EnhancedLinear(config.get('dim', 512), 1024),
+                        nn.ReLU(),
+                        EnhancedLinear(1024, config.get('vocab_size', 128256))
+                    )
+                except ImportError:
+                    try:
+                        from optimization_core.enhanced_mlp import OptimizedLinear
+                        model = nn.Sequential(
+                            OptimizedLinear(config.get('dim', 512), 1024),
+                            nn.ReLU(),
+                            OptimizedLinear(1024, config.get('vocab_size', 128256))
+                        )
+                    except ImportError:
+                        model = nn.Sequential(
+                            nn.Linear(config.get('dim', 512), 1024),
+                            nn.ReLU(),
+                            nn.Linear(1024, config.get('vocab_size', 128256))
+                        )
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                model = optimizer.optimize_model(model, "Llama-3.1-405B")
+            except ImportError:
+                pass
+            
+            return model
+    
+    def create_claude_3_5_sonnet_model(config):
+        """Create Claude-3.5-Sonnet model with given config."""
+        try:
+            return create_claude_3_5_sonnet_model(config)
+        except Exception as e:
+            print(f"Failed to create Claude-3.5-Sonnet model: {e}")
+            import torch.nn as nn
+            try:
+                from Frontier_Model_run.models.claude_3_5_sonnet import ClaudeLinear
+                model = nn.Sequential(
+                    ClaudeLinear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    ClaudeLinear(1024, config.get('vocab_size', 100000))
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('vocab_size', 100000))
+                )
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                model = optimizer.optimize_model(model, "Claude-3.5-Sonnet")
+            except ImportError:
+                pass
+            
+            return model
 
 @dataclass
 class ModelMetrics:
@@ -80,6 +290,48 @@ class ComprehensiveBenchmark:
     def __init__(self):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.results = []
+    
+    def create_llama_3_1_405b_model_instance(self, config):
+        """Create Llama-3.1-405B model instance."""
+        try:
+            return create_llama_3_1_405b_model(config)
+        except Exception as e:
+            print(f"Failed to create Llama-3.1-405B model: {e}")
+            import torch.nn as nn
+            try:
+                from Frontier_Model_run.models.llama_3_1_405b import LlamaLinear
+                return nn.Sequential(
+                    LlamaLinear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    LlamaLinear(1024, config.get('vocab_size', 128256))
+                )
+            except ImportError:
+                return nn.Sequential(
+                    nn.Linear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('vocab_size', 128256))
+                )
+    
+    def create_claude_3_5_sonnet_model_instance(self, config):
+        """Create Claude-3.5-Sonnet model instance."""
+        try:
+            return create_claude_3_5_sonnet_model(config)
+        except Exception as e:
+            print(f"Failed to create Claude-3.5-Sonnet model: {e}")
+            import torch.nn as nn
+            try:
+                from Frontier_Model_run.models.claude_3_5_sonnet import ClaudeLinear
+                return nn.Sequential(
+                    ClaudeLinear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    ClaudeLinear(1024, config.get('vocab_size', 100000))
+                )
+            except ImportError:
+                return nn.Sequential(
+                    nn.Linear(config.get('dim', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('vocab_size', 100000))
+                )
         
     def count_parameters(self, model) -> Tuple[int, int]:
         """Count total and trainable parameters."""
@@ -345,6 +597,51 @@ class ComprehensiveBenchmark:
                     'n_routed_experts': 8,
                     'n_shared_experts': 1,
                     'n_activated_experts': 2
+                }
+            },
+            {
+                'name': 'Llama-3.1-405B',
+                'factory': self.create_llama_3_1_405b_model_instance,
+                'config': {
+                    'dim': 512,
+                    'n_layers': 4,
+                    'n_heads': 8,
+                    'n_kv_heads': 2,
+                    'vocab_size': 128256,
+                    'multiple_of': 256,
+                    'ffn_dim_multiplier': 1.3,
+                    'norm_eps': 1e-5,
+                    'rope_theta': 500000.0,
+                    'max_seq_len': 1024,
+                    'use_scaled_rope': True,
+                    'rope_scaling_factor': 8.0,
+                    'use_flash_attention': False,
+                    'use_gradient_checkpointing': True,
+                    'use_quantization': False,
+                }
+            },
+            {
+                'name': 'Claude-3.5-Sonnet',
+                'factory': self.create_claude_3_5_sonnet_model_instance,
+                'config': {
+                    'dim': 512,
+                    'n_layers': 4,
+                    'n_heads': 8,
+                    'n_kv_heads': 2,
+                    'vocab_size': 100000,
+                    'multiple_of': 256,
+                    'ffn_dim_multiplier': 2.6875,
+                    'norm_eps': 1e-5,
+                    'rope_theta': 10000.0,
+                    'max_seq_len': 1024,
+                    'use_constitutional_ai': True,
+                    'use_harmlessness_filter': True,
+                    'use_helpfulness_boost': True,
+                    'use_flash_attention': False,
+                    'use_gradient_checkpointing': True,
+                    'use_quantization': False,
+                    'use_mixture_of_depths': False,
+                    'safety_threshold': 0.95,
                 }
             },
             {

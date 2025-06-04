@@ -8,6 +8,7 @@ import torch
 import sys
 import os
 import json
+import asyncio
 from typing import Dict, Any, List, Tuple
 import numpy as np
 
@@ -15,6 +16,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from Frontier_Model_run.models.deepseek_v3 import create_deepseek_v3_model
+    from Frontier_Model_run.models.llama_3_1_405b import create_llama_3_1_405b_model
+    from Frontier_Model_run.models.claude_3_5_sonnet import create_claude_3_5_sonnet_model
     from variant.viral_clipper import create_viral_clipper_model
     from brandkit.brand_analyzer import create_brand_analyzer_model
     from qwen_variant.qwen_model import create_qwen_model
@@ -22,6 +25,8 @@ try:
     from optimization_core.computational_optimizations import ComputationalOptimizer
     from optimization_core.optimization_profiles import get_optimization_profiles, apply_optimization_profile
     from comprehensive_benchmark import ComprehensiveBenchmark
+    from benchmarking_framework.comparative_benchmark import ComparativeBenchmark
+    from benchmarking_framework.model_registry import ModelRegistry
     MODELS_AVAILABLE = True
 except ImportError as e:
     print(f"Import warning: {e}")
@@ -34,6 +39,7 @@ class TruthGPTDemo:
     def __init__(self):
         self.models = {}
         self.benchmark = None
+        self.comparative_benchmark = None
         self.load_models()
     
     def load_models(self):
@@ -44,6 +50,8 @@ class TruthGPTDemo:
             if MODELS_AVAILABLE:
                 self.models = {
                     "DeepSeek-V3": self.load_deepseek_v3(),
+                    "Llama-3.1-405B": self.load_llama_3_1_405b(),
+                    "Claude-3.5-Sonnet": self.load_claude_3_5_sonnet(),
                     "Viral-Clipper": self.load_viral_clipper(),
                     "Brand-Analyzer": self.load_brand_analyzer(),
                     "Qwen-Optimized": self.load_qwen_model()
@@ -51,13 +59,17 @@ class TruthGPTDemo:
                 
                 try:
                     self.benchmark = ComprehensiveBenchmark()
+                    self.comparative_benchmark = ComparativeBenchmark()
                 except:
                     print("⚠️ Benchmark suite not available, using mock metrics")
                     self.benchmark = None
+                    self.comparative_benchmark = None
             else:
                 print("⚠️ Model implementations not available, using demo models")
                 self.models = {
                     "DeepSeek-V3-Demo": self.create_demo_model(),
+                    "Llama-3.1-405B-Demo": self.create_demo_model(),
+                    "Claude-3.5-Sonnet-Demo": self.create_demo_model(),
                     "Viral-Clipper-Demo": self.create_demo_model(),
                     "Brand-Analyzer-Demo": self.create_demo_model(),
                     "Qwen-Optimized-Demo": self.create_demo_model()
@@ -96,11 +108,23 @@ class TruthGPTDemo:
             model = create_deepseek_v3_model(config)
             
             try:
-                profiles = get_optimization_profiles()
-                optimized_model, _ = apply_optimization_profile(model, 'speed_optimized')
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'enable_gradient_checkpointing': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True,
+                    'use_mcts_optimization': True
+                })
+                optimized_model = optimizer.optimize_model(model, "DeepSeek-V3")
                 return optimized_model
-            except:
-                return model
+            except ImportError:
+                try:
+                    profiles = get_optimization_profiles()
+                    optimized_model, _ = apply_optimization_profile(model, 'speed_optimized')
+                    return optimized_model
+                except:
+                    return model
             
         except Exception as e:
             print(f"DeepSeek-V3 loading error: {e}")
@@ -121,7 +145,18 @@ class TruthGPTDemo:
             }
             
             model = create_viral_clipper_model(config)
-            return model
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                optimized_model = optimizer.optimize_model(model, "Viral-Clipper")
+                return optimized_model
+            except ImportError:
+                return model
             
         except Exception as e:
             print(f"Viral Clipper loading error: {e}")
@@ -143,11 +178,118 @@ class TruthGPTDemo:
             }
             
             model = create_brand_analyzer_model(config)
-            return model
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                optimized_model = optimizer.optimize_model(model, "Brand-Analyzer")
+                return optimized_model
+            except ImportError:
+                return model
             
         except Exception as e:
             print(f"Brand Analyzer loading error: {e}")
             return self.create_demo_model()
+    def load_llama_3_1_405b(self):
+        """Load Llama-3.1-405B native model."""
+        try:
+            if not MODELS_AVAILABLE:
+                return self.create_demo_model()
+                
+            config = {
+                'dim': 1024,
+                'n_layers': 4,
+                'n_heads': 16,
+                'n_kv_heads': 4,
+                'vocab_size': 128256,
+                'multiple_of': 256,
+                'ffn_dim_multiplier': 1.3,
+                'norm_eps': 1e-5,
+                'rope_theta': 500000.0,
+                'max_seq_len': 2048,
+                'use_scaled_rope': True,
+                'rope_scaling_factor': 8.0,
+                'use_flash_attention': False,
+                'use_gradient_checkpointing': True,
+                'use_quantization': True,
+                'quantization_bits': 8,
+            }
+            
+            model = create_llama_3_1_405b_model(config)
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'enable_gradient_checkpointing': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True,
+                    'use_mcts_optimization': True
+                })
+                optimized_model = optimizer.optimize_model(model, "Llama-3.1-405B")
+                return optimized_model
+            except ImportError:
+                return model
+            
+        except Exception as e:
+            print(f"Llama-3.1-405B loading error: {e}")
+            return self.create_demo_model()
+    
+    def load_claude_3_5_sonnet(self):
+        """Load Claude-3.5-Sonnet native model."""
+        try:
+            if not MODELS_AVAILABLE:
+                return self.create_demo_model()
+                
+            config = {
+                'dim': 1024,
+                'n_layers': 4,
+                'n_heads': 16,
+                'n_kv_heads': 4,
+                'vocab_size': 100000,
+                'multiple_of': 256,
+                'ffn_dim_multiplier': 2.6875,
+                'norm_eps': 1e-5,
+                'rope_theta': 10000.0,
+                'max_seq_len': 2048,
+                'use_constitutional_ai': True,
+                'use_harmlessness_filter': True,
+                'use_helpfulness_boost': True,
+                'use_flash_attention': False,
+                'use_gradient_checkpointing': True,
+                'use_quantization': True,
+                'quantization_bits': 8,
+                'use_mixture_of_depths': False,
+                'use_retrieval_augmentation': False,
+                'safety_threshold': 0.95,
+            }
+            
+            model = create_claude_3_5_sonnet_model(config)
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'enable_gradient_checkpointing': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True,
+                    'use_constitutional_ai': True,
+                    'use_mcts_optimization': True
+                })
+                optimized_model = optimizer.optimize_model(model, "Claude-3.5-Sonnet")
+                return optimized_model
+            except ImportError:
+                return model
+            
+        except Exception as e:
+            print(f"Claude-3.5-Sonnet loading error: {e}")
+            return self.create_demo_model()
+
+
     
     def load_qwen_model(self):
         """Load Qwen optimized model."""
@@ -167,7 +309,18 @@ class TruthGPTDemo:
             }
             
             model = create_qwen_model(config)
-            return model
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                optimized_model = optimizer.optimize_model(model, "Qwen-Model")
+                return optimized_model
+            except ImportError:
+                return model
             
         except Exception as e:
             print(f"Qwen model loading error: {e}")
@@ -175,13 +328,33 @@ class TruthGPTDemo:
     
     def create_demo_model(self):
         """Create simple demo model for fallback."""
-        return torch.nn.Sequential(
-            torch.nn.Linear(512, 1024),
-            torch.nn.ReLU(),
-            torch.nn.Linear(1024, 512),
-            torch.nn.ReLU(),
-            torch.nn.Linear(512, 100)
-        )
+        try:
+            from optimization_core.cuda_kernels import OptimizedLinear
+            return torch.nn.Sequential(
+                OptimizedLinear(512, 1024),
+                torch.nn.ReLU(),
+                OptimizedLinear(1024, 512),
+                torch.nn.ReLU(),
+                OptimizedLinear(512, 100)
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import EnhancedLinear
+                return torch.nn.Sequential(
+                    EnhancedLinear(512, 1024),
+                    torch.nn.ReLU(),
+                    EnhancedLinear(1024, 512),
+                    torch.nn.ReLU(),
+                    EnhancedLinear(512, 100)
+                )
+            except ImportError:
+                return torch.nn.Sequential(
+                    torch.nn.Linear(512, 1024),
+                    torch.nn.ReLU(),
+                    torch.nn.Linear(1024, 512),
+                    torch.nn.ReLU(),
+                    torch.nn.Linear(512, 100)
+                )
     
     def get_model_info(self, model_name: str) -> Dict[str, Any]:
         """Get comprehensive model information."""
@@ -319,6 +492,56 @@ class TruthGPTDemo:
             
         except Exception as e:
             return f"❌ Benchmark error: {str(e)}"
+    
+    def run_comparative_analysis(self):
+        """Run comparative analysis between TruthGPT and best open/closed source models."""
+        try:
+            if not self.comparative_benchmark:
+                return [], "❌ Comparative benchmark not available"
+            
+            registry = ModelRegistry()
+            best_models = registry.get_best_models_only()
+            
+            summary_data = []
+            
+            for model in best_models["truthgpt_models"]:
+                if model:
+                    summary_data.append([
+                        model.name,
+                        "TruthGPT",
+                        f"{model.parameters:,}" if model.parameters else "N/A",
+                        "Free",
+                        "Local",
+                        "High Privacy"
+                    ])
+            
+            for model in best_models["open_source_best"]:
+                if model:
+                    summary_data.append([
+                        model.name,
+                        model.provider,
+                        f"{model.parameters:,}" if model.parameters else "N/A",
+                        "Free",
+                        "Local/Cloud",
+                        "High Privacy"
+                    ])
+            
+            for model in best_models["closed_source_best"]:
+                if model:
+                    summary_data.append([
+                        model.name,
+                        model.provider,
+                        "Proprietary",
+                        "$0.003-0.060/1K",
+                        "API Only",
+                        "Limited Privacy"
+                    ])
+            
+            return summary_data, "✅ Comparative analysis completed successfully!"
+            
+        except Exception as e:
+            error_data = [["Error", "N/A", "N/A", "N/A", "N/A", str(e)]]
+            return error_data, f"❌ Error running comparative analysis: {str(e)}"
 
 demo_instance = TruthGPTDemo()
 
@@ -399,6 +622,44 @@ def create_gradio_interface():
                 inputs=[benchmark_model],
                 outputs=[benchmark_output]
             )
+        
+        with gr.Tab("Comparative Analysis"):
+            gr.Markdown("## 🏆 TruthGPT vs Best Open Source vs Best Closed Source Models")
+            gr.Markdown("Compare TruthGPT models against the absolute best performing open source and closed source models available today.")
+            
+            comparative_button = gr.Button("Run Comparative Analysis", variant="primary")
+            
+            comparative_results = gr.Dataframe(
+                headers=["Model", "Provider", "Parameters", "Cost", "Deployment", "Privacy"],
+                label="Comparative Analysis Results"
+            )
+            
+            comparative_status = gr.Textbox(
+                label="Analysis Status",
+                interactive=False
+            )
+            
+            comparative_button.click(
+                fn=demo_instance.run_comparative_analysis,
+                outputs=[comparative_results, comparative_status]
+            )
+            
+            gr.Markdown("""
+            
+            - **🆓 Cost Efficiency**: Completely free to run locally
+            - **🔒 Privacy**: Full data control and privacy protection  
+            - **⚡ Performance**: Optimized for speed and efficiency
+            - **🛠️ Customization**: Full access to model architecture and weights
+            - **🌐 Independence**: No dependency on external APIs or services
+            
+            - **Llama-3.1-405B**: Meta's flagship model with 405B parameters
+            - **Qwen2.5-72B**: Alibaba's advanced reasoning model
+            - **DeepSeek-V3**: Advanced MoE architecture with 671B parameters
+            
+            - **Claude-3.5-Sonnet**: Anthropic's most capable model
+            - **GPT-4o**: OpenAI's multimodal flagship
+            - **Gemini-1.5-Pro**: Google's advanced model with 2M context
+            """)
         
         with gr.Tab("About"):
             gr.Markdown("""

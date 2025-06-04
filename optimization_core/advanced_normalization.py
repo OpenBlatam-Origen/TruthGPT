@@ -62,7 +62,15 @@ class CRMSNorm(nn.Module):
         super().__init__()
         self.input_dim = input_dim
         self.epsilon = epsilon
-        self.condition_proj = nn.Linear(cond_dim, input_dim)
+        try:
+            from optimization_core.cuda_kernels import OptimizedLinear
+            self.condition_proj = OptimizedLinear(cond_dim, input_dim)
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import EnhancedLinear
+                self.condition_proj = EnhancedLinear(cond_dim, input_dim)
+            except ImportError:
+                self.condition_proj = nn.Linear(cond_dim, input_dim)
         self.scale = nn.Parameter(torch.ones(input_dim))
 
     def forward(self, x: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
