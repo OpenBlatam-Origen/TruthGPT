@@ -293,11 +293,260 @@ class MCTSOptimizer:
         
         return best_node.config, best_objective
 
+@dataclass
+class NeuralGuidedMCTSArgs(MCTSOptimizationArgs):
+    """Enhanced MCTS arguments with neural network guidance."""
+    use_neural_guidance: bool = field(default=True, metadata={"help": "Enable neural network guidance"})
+    entropy_weight: float = field(default=0.1, metadata={"help": "Weight for entropy-guided exploration"})
+    pruning_threshold: float = field(default=0.01, metadata={"help": "Threshold for move pruning"})
+    time_management: bool = field(default=True, metadata={"help": "Enable adaptive time management"})
+    policy_temperature: float = field(default=1.0, metadata={"help": "Temperature for policy softmax"})
+    neural_guidance_weight: float = field(default=0.3, metadata={"help": "Weight for neural guidance in selection"})
+
+class NeuralGuidedMCTS(MCTS):
+    """Enhanced MCTS with neural network guidance and advanced pruning."""
+    
+    def __init__(self, root_config: Dict[str, Any], args: NeuralGuidedMCTSArgs, 
+                 policy_network=None, value_network=None):
+        super().__init__(root_config, args)
+        self.args = args
+        self.policy_network = policy_network
+        self.value_network = value_network
+        self.move_counts = {}
+        self.entropy_history = []
+        self.pruned_moves = 0
+        self.total_evaluations = 0
+    
+    def get_policy_priors(self, node: MCTSNode) -> List[float]:
+        """Get policy priors from neural network."""
+        if self.policy_network is None:
+            return [1.0] * len(node.children)
+        
+        try:
+            config_tensor = self._config_to_tensor(node.config)
+            with torch.no_grad():
+                policy_logits = self.policy_network(config_tensor)
+                policy_probs = torch.softmax(policy_logits / self.args.policy_temperature, dim=-1)
+            
+            probs_list = policy_probs.cpu().numpy().flatten().tolist()
+            
+            num_children = len(node.children)
+            if len(probs_list) >= num_children:
+                return [float(p) for p in probs_list[:num_children]]
+            else:
+                uniform_prob = 1.0 / num_children
+                return [float(p) for p in probs_list] + [uniform_prob] * (num_children - len(probs_list))
+        except Exception as e:
+            return [1.0] * len(node.children)
+    
+    def _config_to_tensor(self, config: Dict[str, Any]) -> torch.Tensor:
+        """Convert configuration to tensor for neural network input."""
+        features = []
+        for key in ['learning_rate', 'batch_size', 'hidden_size', 'num_layers', 'num_heads', 'dropout', 'weight_decay', 'warmup_ratio']:
+            if key in config:
+                if key == 'learning_rate':
+                    features.append(math.log10(config[key] + 1e-10))
+                elif key in ['batch_size', 'hidden_size', 'num_layers', 'num_heads']:
+                    features.append(math.log2(config[key] + 1))
+                else:
+                    features.append(config[key])
+            else:
+                features.append(0.0)
+        return torch.tensor(features, dtype=torch.float32).unsqueeze(0)
+    
+    def neural_guided_selection(self, node: MCTSNode, eval_remain: float) -> MCTSNode:
+        """Select child using neural network policy guidance."""
+        if not node.children:
+            return node
+            
+        policy_priors = self.get_policy_priors(node) if self.args.use_neural_guidance else [1.0] * len(node.children)
+        
+        best_child = None
+        best_score = float('-inf')
+        
+        for i, child in enumerate(node.children):
+            uct_score = self.uct(child, eval_remain)
+            
+            if self.args.use_neural_guidance:
+                policy_bonus = policy_priors[i] * self.args.neural_guidance_weight
+                entropy_bonus = self.calculate_entropy_bonus(child)
+                total_score = uct_score + policy_bonus + entropy_bonus
+            else:
+                total_score = uct_score
+            
+            if self.should_prune_move(child, total_score):
+                self.pruned_moves += 1
+                continue
+                
+            if total_score > best_score:
+                best_score = total_score
+                best_child = child
+        
+        return best_child if best_child else node.children[0]
+    
+    def calculate_entropy_bonus(self, node: MCTSNode) -> float:
+        """Calculate entropy-based exploration bonus."""
+        if node.visits == 0 or not node.parent:
+            return self.args.entropy_weight
+        
+        total_visits = sum(c.visits for c in node.parent.children)
+        if total_visits == 0:
+            return self.args.entropy_weight
+            
+        visit_prob = node.visits / total_visits
+        entropy = -visit_prob * math.log(visit_prob + 1e-8)
+        return entropy * self.args.entropy_weight
+    
+    def should_prune_move(self, node: MCTSNode, score: float) -> bool:
+        """Determine if a move should be pruned based on score and visits."""
+        if not self.args.time_management:
+            return False
+            
+        if node.visits < 2:
+            return False
+            
+        avg_score = sum(c.Q for c in node.parent.children) / len(node.parent.children)
+        return score < avg_score - self.args.pruning_threshold
+    
+    def get_optimization_stats(self) -> Dict[str, Any]:
+        """Get optimization statistics."""
+        return {
+            'pruned_moves': self.pruned_moves,
+            'total_evaluations': self.total_evaluations,
+            'pruning_rate': self.pruned_moves / max(1, self.total_evaluations),
+            'entropy_history': self.entropy_history[-10:],
+            'neural_guidance_enabled': self.args.use_neural_guidance
+        }
+
+class EnhancedMCTSOptimizer(MCTSOptimizer):
+    """Enhanced MCTS optimizer with neural guidance and advanced features."""
+    
+    def __init__(self, args: NeuralGuidedMCTSArgs, objective_function, 
+                 policy_network=None, value_network=None):
+        super().__init__(args, objective_function)
+        self.args = args
+        self.policy_network = policy_network
+        self.value_network = value_network
+        self.optimization_history = []
+    
+    def optimize(self, initial_config: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], float]:
+        """Run enhanced MCTS optimization."""
+        if initial_config is None:
+            initial_config = self.generate_random_config()
+        
+        mcts = NeuralGuidedMCTS(initial_config, self.args, self.policy_network, self.value_network)
+        
+        initial_objective = self.evaluate_config(initial_config)
+        mcts.root.objective = initial_objective
+        mcts.root.Q = -1 * initial_objective
+        
+        print(f"Starting Enhanced MCTS optimization with initial objective: {initial_objective:.4f}")
+        
+        for i in range(self.args.init_size):
+            if i == 0:
+                config = initial_config
+                objective = initial_objective
+            else:
+                config = self.generate_random_config()
+                objective = self.evaluate_config(config)
+            
+            child_node = MCTSNode(
+                config=config,
+                objective=objective,
+                parent=mcts.root,
+                depth=1,
+                visits=1,
+                Q=-1 * objective
+            )
+            mcts.root.add_child(child_node)
+            mcts.root.children_info.append({
+                'config': config,
+                'objective': objective,
+                'operator': 'init'
+            })
+            mcts.backpropagate(child_node)
+            child_node.subtree.append(child_node)
+        
+        print(f"Initialized population with {len(mcts.root.children)} configurations")
+        
+        while self.eval_times < self.args.fe_max:
+            eval_remain = max(1 - self.eval_times / self.args.fe_max, 0)
+            
+            if self.eval_times % 10 == 0:
+                stats = mcts.get_optimization_stats()
+                print(f"Evaluation {self.eval_times}/{self.args.fe_max}, Best Q: {mcts.q_max:.4f}, "
+                      f"Pruning Rate: {stats['pruning_rate']:.2%}")
+            
+            current_node = mcts.root
+            path = []
+            
+            while len(current_node.children) > 0 and current_node.depth < mcts.max_depth:
+                selected_child = mcts.neural_guided_selection(current_node, eval_remain)
+                if selected_child is None:
+                    break
+                path.append(selected_child)
+                current_node = selected_child
+                
+                if int(current_node.visits ** mcts.alpha) > len(current_node.children):
+                    operator_idx = random.choices(
+                        range(len(self.args.operators)),
+                        weights=self.args.operator_weights,
+                        k=1
+                    )[0]
+                    operator = self.args.operators[operator_idx]
+                    
+                    new_node = self.expand_node(mcts, current_node, operator)
+                    if new_node:
+                        mcts.total_evaluations += 1
+                        if self.eval_times % 20 == 0:
+                            print(f"Expanded with {operator}: objective={new_node.objective:.4f}")
+            
+            for operator, weight in zip(self.args.operators, self.args.operator_weights):
+                for _ in range(weight):
+                    if self.eval_times >= self.args.fe_max:
+                        break
+                    expanded = self.expand_node(mcts, current_node, operator)
+                    if expanded:
+                        mcts.total_evaluations += 1
+        
+        best_node = mcts.root
+        best_objective = float('inf')
+        
+        def find_best_recursive(node):
+            nonlocal best_node, best_objective
+            if node.objective < best_objective:
+                best_objective = node.objective
+                best_node = node
+            for child in node.children:
+                find_best_recursive(child)
+        
+        find_best_recursive(mcts.root)
+        
+        final_stats = mcts.get_optimization_stats()
+        print(f"Enhanced MCTS optimization completed. Best objective: {best_objective:.4f}")
+        print(f"Optimization stats: {final_stats}")
+        print(f"Best configuration: {best_node.config}")
+        
+        self.optimization_history.append({
+            'best_objective': best_objective,
+            'best_config': best_node.config,
+            'stats': final_stats
+        })
+        
+        return best_node.config, best_objective
+
 def create_mcts_optimizer(objective_function, args: Optional[MCTSOptimizationArgs] = None):
     """Factory function to create MCTS optimizer."""
     if args is None:
         args = MCTSOptimizationArgs()
     return MCTSOptimizer(args, objective_function)
+
+def create_enhanced_mcts_optimizer(objective_function, args: Optional[NeuralGuidedMCTSArgs] = None,
+                                 policy_network=None, value_network=None):
+    """Factory function to create enhanced MCTS optimizer."""
+    if args is None:
+        args = NeuralGuidedMCTSArgs()
+    return EnhancedMCTSOptimizer(args, objective_function, policy_network, value_network)
 
 def example_objective_function(config: Dict[str, Any]) -> float:
     """Example objective function for model optimization."""
