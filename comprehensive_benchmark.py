@@ -28,11 +28,27 @@ except ImportError:
                 DeepSeekLinear(1024, config.get('vocab_size', 1000))
             )
         except ImportError:
-            model = nn.Sequential(
-                nn.Linear(config.get('hidden_size', 512), 1024),
-                nn.ReLU(),
-                nn.Linear(1024, config.get('vocab_size', 1000))
-            )
+            try:
+                from optimization_core.enhanced_mlp import EnhancedLinear
+                model = nn.Sequential(
+                    EnhancedLinear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    EnhancedLinear(1024, config.get('vocab_size', 1000))
+                )
+            except ImportError:
+                try:
+                    from optimization_core.enhanced_mlp import OptimizedLinear
+                    model = nn.Sequential(
+                        OptimizedLinear(config.get('hidden_size', 512), 1024),
+                        nn.ReLU(),
+                        OptimizedLinear(1024, config.get('vocab_size', 1000))
+                    )
+                except ImportError:
+                    model = nn.Sequential(
+                        nn.Linear(config.get('hidden_size', 512), 1024),
+                        nn.ReLU(),
+                        nn.Linear(1024, config.get('vocab_size', 1000))
+                    )
         
         try:
             from enhanced_model_optimizer import create_universal_optimizer
@@ -51,11 +67,27 @@ try:
 except ImportError:
     def create_viral_clipper_model(config):
         import torch.nn as nn
-        model = nn.Sequential(
-            nn.Linear(config.get('hidden_size', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, 100)
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            model = nn.Sequential(
+                EnhancedLinear(config.get('hidden_size', 512), 1024),
+                nn.ReLU(),
+                EnhancedLinear(1024, 100)
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import OptimizedLinear
+                model = nn.Sequential(
+                    OptimizedLinear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    OptimizedLinear(1024, 100)
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, 100)
+                )
         
         try:
             from enhanced_model_optimizer import create_universal_optimizer
@@ -74,11 +106,27 @@ try:
 except ImportError:
     def create_brand_analyzer_model(config):
         import torch.nn as nn
-        model = nn.Sequential(
-            nn.Linear(config.get('hidden_dim', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, config.get('num_brand_components', 7))
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            model = nn.Sequential(
+                EnhancedLinear(config.get('hidden_dim', 512), 1024),
+                nn.ReLU(),
+                EnhancedLinear(1024, config.get('num_brand_components', 7))
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import OptimizedLinear
+                model = nn.Sequential(
+                    OptimizedLinear(config.get('hidden_dim', 512), 1024),
+                    nn.ReLU(),
+                    OptimizedLinear(1024, config.get('num_brand_components', 7))
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('hidden_dim', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('num_brand_components', 7))
+                )
         
         try:
             from enhanced_model_optimizer import create_universal_optimizer
@@ -99,11 +147,27 @@ try:
 except ImportError:
     def create_qwen_model(config):
         import torch.nn as nn
-        model = nn.Sequential(
-            nn.Linear(config.get('hidden_size', 512), 1024),
-            nn.ReLU(),
-            nn.Linear(1024, config.get('vocab_size', 1000))
-        )
+        try:
+            from optimization_core.enhanced_mlp import EnhancedLinear
+            model = nn.Sequential(
+                EnhancedLinear(config.get('hidden_size', 512), 1024),
+                nn.ReLU(),
+                EnhancedLinear(1024, config.get('vocab_size', 1000))
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import OptimizedLinear
+                model = nn.Sequential(
+                    OptimizedLinear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    OptimizedLinear(1024, config.get('vocab_size', 1000))
+                )
+            except ImportError:
+                model = nn.Sequential(
+                    nn.Linear(config.get('hidden_size', 512), 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, config.get('vocab_size', 1000))
+                )
         
         try:
             from enhanced_model_optimizer import create_universal_optimizer
@@ -127,17 +191,46 @@ except ImportError:
             import torch.nn as nn
             try:
                 from Frontier_Model_run.models.llama_3_1_405b import LlamaLinear
-                return nn.Sequential(
+                model = nn.Sequential(
                     LlamaLinear(config.get('dim', 512), 1024),
                     nn.ReLU(),
                     LlamaLinear(1024, config.get('vocab_size', 128256))
                 )
             except ImportError:
-                return nn.Sequential(
-                    nn.Linear(config.get('dim', 512), 1024),
-                    nn.ReLU(),
-                    nn.Linear(1024, config.get('vocab_size', 128256))
-                )
+                try:
+                    from optimization_core.enhanced_mlp import EnhancedLinear
+                    model = nn.Sequential(
+                        EnhancedLinear(config.get('dim', 512), 1024),
+                        nn.ReLU(),
+                        EnhancedLinear(1024, config.get('vocab_size', 128256))
+                    )
+                except ImportError:
+                    try:
+                        from optimization_core.enhanced_mlp import OptimizedLinear
+                        model = nn.Sequential(
+                            OptimizedLinear(config.get('dim', 512), 1024),
+                            nn.ReLU(),
+                            OptimizedLinear(1024, config.get('vocab_size', 128256))
+                        )
+                    except ImportError:
+                        model = nn.Sequential(
+                            nn.Linear(config.get('dim', 512), 1024),
+                            nn.ReLU(),
+                            nn.Linear(1024, config.get('vocab_size', 128256))
+                        )
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                model = optimizer.optimize_model(model, "Llama-3.1-405B")
+            except ImportError:
+                pass
+            
+            return model
     
     def create_claude_3_5_sonnet_model(config):
         """Create Claude-3.5-Sonnet model with given config."""
@@ -148,17 +241,30 @@ except ImportError:
             import torch.nn as nn
             try:
                 from Frontier_Model_run.models.claude_3_5_sonnet import ClaudeLinear
-                return nn.Sequential(
+                model = nn.Sequential(
                     ClaudeLinear(config.get('dim', 512), 1024),
                     nn.ReLU(),
                     ClaudeLinear(1024, config.get('vocab_size', 100000))
                 )
             except ImportError:
-                return nn.Sequential(
+                model = nn.Sequential(
                     nn.Linear(config.get('dim', 512), 1024),
                     nn.ReLU(),
                     nn.Linear(1024, config.get('vocab_size', 100000))
                 )
+            
+            try:
+                from enhanced_model_optimizer import create_universal_optimizer
+                optimizer = create_universal_optimizer({
+                    'enable_fp16': True,
+                    'use_advanced_normalization': True,
+                    'use_enhanced_mlp': True
+                })
+                model = optimizer.optimize_model(model, "Claude-3.5-Sonnet")
+            except ImportError:
+                pass
+            
+            return model
 
 @dataclass
 class ModelMetrics:

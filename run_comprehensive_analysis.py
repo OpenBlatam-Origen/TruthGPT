@@ -83,11 +83,27 @@ def test_optimization_profiles():
         profiles = get_optimization_profiles()
         print(f"✅ Perfiles disponibles: {list(profiles.keys())}")
         
-        test_model = nn.Sequential(
-            nn.Linear(512, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, 100)
-        )
+        try:
+            from optimization_core.enhanced_mlp import OptimizedLinear
+            test_model = nn.Sequential(
+                OptimizedLinear(512, 1024),
+                nn.ReLU(),
+                OptimizedLinear(1024, 100)
+            )
+        except ImportError:
+            try:
+                from optimization_core.enhanced_mlp import EnhancedLinear
+                test_model = nn.Sequential(
+                    EnhancedLinear(512, 1024),
+                    nn.ReLU(),
+                    EnhancedLinear(1024, 100)
+                )
+            except ImportError:
+                test_model = nn.Sequential(
+                    nn.Linear(512, 1024),
+                    nn.ReLU(),
+                    nn.Linear(1024, 100)
+                )
         
         for profile_name in ['speed_optimized', 'accuracy_optimized', 'balanced']:
             try:
