@@ -94,6 +94,18 @@ from .hybrid_optimization_core import (
     OptimizationEnvironment, create_hybrid_optimization_core
 )
 
+from .enhanced_parameter_optimizer import (
+    EnhancedParameterOptimizer, EnhancedParameterConfig,
+    create_enhanced_parameter_optimizer, optimize_model_parameters
+)
+
+from .parameter_optimization_utils import (
+    calculate_parameter_efficiency, optimize_learning_rate_schedule,
+    optimize_rl_parameters, optimize_temperature_parameters,
+    optimize_quantization_parameters, optimize_memory_parameters,
+    generate_model_specific_optimizations, benchmark_parameter_optimization
+)
+
 __all__ = [
     'OptimizedLayerNorm',
     'OptimizedRMSNorm',
@@ -300,7 +312,21 @@ __all__ = [
     'PolicyNetwork',
     'ValueNetwork',
     'OptimizationEnvironment',
-    'create_hybrid_optimization_core'
+    'create_hybrid_optimization_core',
+    
+    'EnhancedParameterOptimizer',
+    'EnhancedParameterConfig',
+    'create_enhanced_parameter_optimizer',
+    'optimize_model_parameters',
+    
+    'calculate_parameter_efficiency',
+    'optimize_learning_rate_schedule',
+    'optimize_rl_parameters',
+    'optimize_temperature_parameters',
+    'optimize_quantization_parameters',
+    'optimize_memory_parameters',
+    'generate_model_specific_optimizations',
+    'benchmark_parameter_optimization'
 ]
 
-__version__ = "13.0.0"
+__version__ = "13.1.0"

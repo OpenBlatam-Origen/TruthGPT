@@ -59,6 +59,26 @@ class HybridOptimizationConfig:
     rl_epsilon_high: float = 0.3
     rl_max_episodes: int = 100
     rl_max_steps_per_episode: int = 50
+    
+    enable_enhanced_parameter_optimization: bool = True
+    adaptive_learning_rate_scaling: float = 1.5
+    dynamic_threshold_adjustment: bool = True
+    temperature_annealing_rate: float = 0.99
+    quantization_sensitivity_threshold: float = 0.05
+    memory_pressure_threshold: float = 0.85
+    performance_improvement_threshold: float = 0.02
+    parameter_adaptation_momentum: float = 0.9
+    convergence_detection_window: int = 50
+    
+    enable_enhanced_parameter_optimization: bool = True
+    adaptive_learning_rate_scaling: float = 1.5
+    dynamic_threshold_adjustment: bool = True
+    temperature_annealing_rate: float = 0.99
+    quantization_sensitivity_threshold: float = 0.05
+    memory_pressure_threshold: float = 0.85
+    performance_improvement_threshold: float = 0.02
+    parameter_adaptation_momentum: float = 0.9
+    convergence_detection_window: int = 50
 
 class PolicyNetwork(nn.Module):
     """Policy network for RL-based optimization candidate selection."""
