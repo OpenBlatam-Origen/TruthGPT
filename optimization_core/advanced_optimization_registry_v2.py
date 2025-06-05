@@ -254,6 +254,139 @@ ADVANCED_OPTIMIZATION_CONFIGS = {
             'difficulty_levels': ['amc_12', 'aime'],
             'problems_per_category': 10
         }
+    ),
+    
+    'deepseek_v3_enhanced': AdvancedOptimizationConfig(
+        enable_advanced_normalization=True,
+        enable_positional_encodings=True,
+        enable_enhanced_mlp=True,
+        enable_rl_pruning=True,
+        enable_enhanced_mcts=True,
+        enable_olympiad_benchmarks=True,
+        advanced_normalization_config={
+            'use_llama_rms_norm': True,
+            'eps': 5e-7,
+            'adaptive_eps': True
+        },
+        positional_encoding_config={
+            'use_fixed_llama_rotary_embedding': True,
+            'max_seq_len': 8192,
+            'rope_scaling_factor': 1.2
+        },
+        enhanced_mcts_config={
+            'use_neural_guidance': True,
+            'entropy_weight': 0.03,
+            'pruning_threshold': 0.003,
+            'exploration_temperature': 0.8,
+            'value_network_lr': 5e-4
+        },
+        enhanced_mlp_config={
+            'use_swiglu': True,
+            'intermediate_size_multiplier': 2.7,
+            'dropout_rate': 0.05
+        }
+    ),
+    
+    'qwen_optimized': AdvancedOptimizationConfig(
+        enable_advanced_normalization=True,
+        enable_positional_encodings=True,
+        enable_enhanced_mlp=True,
+        enable_rl_pruning=True,
+        enable_enhanced_mcts=True,
+        enable_olympiad_benchmarks=True,
+        advanced_normalization_config={
+            'use_llama_rms_norm': True,
+            'eps': 8e-7,
+            'adaptive_eps': True,
+            'momentum_factor': 0.95
+        },
+        positional_encoding_config={
+            'use_fixed_llama_rotary_embedding': True,
+            'max_seq_len': 4096,
+            'rope_scaling_factor': 1.1,
+            'rope_theta': 10000
+        },
+        enhanced_mcts_config={
+            'use_neural_guidance': True,
+            'entropy_weight': 0.08,
+            'pruning_threshold': 0.008,
+            'exploration_temperature': 0.9,
+            'value_network_lr': 3e-4,
+            'policy_network_lr': 1e-4
+        },
+        enhanced_mlp_config={
+            'use_swiglu': True,
+            'intermediate_size_multiplier': 2.2,
+            'dropout_rate': 0.03,
+            'activation_scaling': 1.1
+        }
+    ),
+    
+    'viral_clipper_optimized': AdvancedOptimizationConfig(
+        enable_advanced_normalization=True,
+        enable_positional_encodings=True,
+        enable_enhanced_mlp=True,
+        enable_rl_pruning=True,
+        enable_enhanced_mcts=True,
+        enable_olympiad_benchmarks=False,
+        advanced_normalization_config={
+            'use_llama_rms_norm': True,
+            'eps': 5e-6,
+            'adaptive_eps': True,
+            'temporal_smoothing': True
+        },
+        positional_encoding_config={
+            'use_temporal_encoding': True,
+            'max_temporal_len': 1000,
+            'temporal_resolution': 0.1
+        },
+        enhanced_mcts_config={
+            'use_neural_guidance': True,
+            'entropy_weight': 0.12,
+            'pruning_threshold': 0.025,
+            'exploration_temperature': 0.7,
+            'multimodal_fusion_weight': 0.6
+        },
+        enhanced_mlp_config={
+            'use_swiglu': True,
+            'intermediate_size_multiplier': 1.8,
+            'dropout_rate': 0.08,
+            'multimodal_projection': True
+        }
+    ),
+    
+    'brandkit_optimized': AdvancedOptimizationConfig(
+        enable_advanced_normalization=True,
+        enable_positional_encodings=True,
+        enable_enhanced_mlp=True,
+        enable_rl_pruning=True,
+        enable_enhanced_mcts=True,
+        enable_olympiad_benchmarks=False,
+        advanced_normalization_config={
+            'use_llama_rms_norm': True,
+            'eps': 3e-6,
+            'adaptive_eps': True,
+            'brand_consistency_weighting': True
+        },
+        positional_encoding_config={
+            'use_spatial_encoding': True,
+            'max_spatial_dim': 512,
+            'color_space_encoding': True
+        },
+        enhanced_mcts_config={
+            'use_neural_guidance': True,
+            'entropy_weight': 0.15,
+            'pruning_threshold': 0.04,
+            'exploration_temperature': 0.6,
+            'brand_coherence_weight': 0.8
+        },
+        enhanced_mlp_config={
+            'use_swiglu': True,
+            'intermediate_size_multiplier': 1.6,
+            'dropout_rate': 0.06,
+            'brand_feature_projection': True,
+            'color_attention_mechanism': True
+        }
     )
 }
 
